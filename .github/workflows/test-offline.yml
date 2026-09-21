@@ -1,0 +1,23 @@
+# Offline pytest suite (excludes live_integration marker).
+# live_integration is reserved only — do not add a live Supabase job here.
+
+name: Threads tests (offline)
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pytest-offline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Pytest (offline — not live_integration)
+        run: python -m pytest -q -m "not live_integration"
