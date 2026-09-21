@@ -7,7 +7,7 @@ Python 3.11 + FastAPI service shell for entity threads. Default local port **800
 1. Copy `example.env` → `.env` (do not commit secrets).
 2. `make serve` or `make dev` — uvicorn `--app-dir src core.api.asgi_app:app` (app modules land in later stories).
 3. `make check-env` — print REQ0 env subset.
-4. `make test` — reserved until smoke/CI story (`STORY-THREADS-00-06`).
+4. `make test` — offline pytest (`not live_integration`).
 
 ## Layout
 

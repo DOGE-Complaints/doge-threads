@@ -23,6 +23,6 @@ check-env:
 	echo "IDENTITY_BASE_URL   = $${IDENTITY_BASE_URL:-<not set>}" && \
 	echo "GATEWAY_BASE_URL    = $${GATEWAY_BASE_URL:-<not set>}"
 
-# Empty-safe until STORY-THREADS-00-06 smoke/CI.
+# Offline pytest (excludes reserved live_integration marker).
 test:
-	@if [ -d tests ]; then python3 -m pytest tests/ -q -m "not live_integration"; else echo "no tests/ yet (STORY-THREADS-00-06)"; fi
+	python3 -m pytest tests/ -q -m "not live_integration"
