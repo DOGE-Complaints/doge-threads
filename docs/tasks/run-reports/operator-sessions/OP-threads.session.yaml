@@ -1,0 +1,22 @@
+# OP-threads.session.yaml — subagent overnight
+builder_project: threads
+op_chat_title: OP-threads
+builder_chat_title: BLD-threads
+validator_chat_title: VAL-threads
+builder_agent_id: 15faceb2-ad58-4629-b1f5-c0c4cd58ebde
+validator_agent_id: f026604b-8fcd-43f3-8d29-330745edf3dd
+bind_mode: task
+delivery: subagent
+overnight: on
+pause_after_story: false
+auto_approve_plan: true
+stop_only_on: explicit operator стоп|stop|pause|halt
+status: ready
+process_file: doge-threads/docs/tasks/run-reports/operator-sessions/OP-threads.process.md
+working_plan: .cursor/plans/OP-threads-00-technical-scaffold-20260921.plan.md
+wave_file: doge-threads/docs/tasks/run-reports/operator-waves/wave-20260921-00-technical-scaffold.md
+queue: STORY-THREADS-00-01,00-02,00-03,00-04,00-05,00-06
+queue_spec: "@doge-threads/docs/tasks/backlog-stories/00-technical-scaffold/STORY-THREADS-00-01…06"
+mode: sequential
+queue_status: running
+Updated: "2026-09-21T13:31:17Z"

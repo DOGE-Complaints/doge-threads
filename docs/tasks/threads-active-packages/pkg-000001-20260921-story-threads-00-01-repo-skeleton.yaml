@@ -1,0 +1,19 @@
+schema_version: 1
+package_sequence: 1
+created_at: "2026-09-21T13:33:54Z"
+label: story-threads-00-01-repo-skeleton
+input_kind: epic_story_tree
+tasks_root: doge-threads/docs/tasks/
+epic_file: doge-threads/docs/tasks/epics/EPIC-THREADS-00-technical-scaffold/EPIC-THREADS-00-technical-scaffold.md
+decision_ref: doge-threads/docs/tasks/backlog-stories/00-technical-scaffold/STORY-THREADS-00-01-repo-skeleton.md
+story_groups:
+- story_key: STORY-THREADS-00-01-repo-skeleton
+  paths:
+  - doge-threads/docs/tasks/epics/EPIC-THREADS-00-technical-scaffold/stories/STORY-THREADS-00-01-repo-skeleton/task-threads-00-01-t01-pyproject/README.md
+  - doge-threads/docs/tasks/epics/EPIC-THREADS-00-technical-scaffold/stories/STORY-THREADS-00-01-repo-skeleton/task-threads-00-01-t02-pyright-requirements/README.md
+  - doge-threads/docs/tasks/epics/EPIC-THREADS-00-technical-scaffold/stories/STORY-THREADS-00-01-repo-skeleton/task-threads-00-01-t03-makefile-port/README.md
+  - doge-threads/docs/tasks/epics/EPIC-THREADS-00-technical-scaffold/stories/STORY-THREADS-00-01-repo-skeleton/task-threads-00-01-t04-railpack/README.md
+  - doge-threads/docs/tasks/epics/EPIC-THREADS-00-technical-scaffold/stories/STORY-THREADS-00-01-repo-skeleton/task-threads-00-01-t05-example-env/README.md
+  - doge-threads/docs/tasks/epics/EPIC-THREADS-00-technical-scaffold/stories/STORY-THREADS-00-01-repo-skeleton/task-threads-00-01-t06-readme-gitignore/README.md
+  - doge-threads/docs/tasks/epics/EPIC-THREADS-00-technical-scaffold/stories/STORY-THREADS-00-01-repo-skeleton/task-threads-00-01-t07-story-gate/README.md
+activation: active
