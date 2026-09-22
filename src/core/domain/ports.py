@@ -1,17 +1,46 @@
 from __future__ import annotations
 
-from typing import Protocol
+from collections.abc import Mapping
+from typing import Any, Protocol
 
 from core.domain.comment import Comment
+from core.domain.thread_context import IssueProjection, ThreadContext
 from core.domain.thread_key import Thread, ThreadKey
 
 
 class ThreadKnobs(Protocol):
-    """Injected depth knobs. Values arrive later via 01-02 compose-pull."""
+    """Injected knobs. Values arrive via 01-02 compose-pull (not a pack loader)."""
 
     @property
     def max_depth(self) -> int:
         """Maximum allowed comment depth (root = 1)."""
+        ...
+
+    @property
+    def max_reactions_per_actor(self) -> int:
+        """Maximum reaction marks per actor (01-04)."""
+        ...
+
+    @property
+    def reactions_enable(self) -> Mapping[str, bool]:
+        """Reaction type enables from pack_shell_settings.threads.reactions.enable."""
+        ...
+
+    @property
+    def media_allowed_types(self) -> tuple[str, ...]:
+        """Attachment allowlist from pack_shell_settings.threads.media.allowed_types."""
+        ...
+
+
+class ThreadContextPort(Protocol):
+    """Compose logical ThreadContext from Issue materials + pack_shell_settings."""
+
+    def compose(
+        self,
+        issue: IssueProjection,
+        settings: Mapping[str, Any],
+    ) -> ThreadContext:
+        """Compose ThreadContext. No pack loader; no Story narrative."""
         ...
 
 

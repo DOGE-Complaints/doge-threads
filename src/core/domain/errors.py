@@ -20,3 +20,11 @@ class DepthExceededError(DiscussionStoreError):
         self.depth = depth
         self.max_depth = max_depth
         super().__init__(f"comment depth {depth} exceeds knobs.max_depth {max_depth}")
+
+
+class ThreadContextError(Exception):
+    """ThreadContext pull or compose failure."""
+
+
+class StoryNarrativeError(ThreadContextError):
+    """Raised when Story narrative keys appear in settings or composed context."""
