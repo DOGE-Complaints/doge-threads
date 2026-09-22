@@ -11,8 +11,15 @@ except Exception:  # pragma: no cover - optional in some local envs
 
 logger = logging.getLogger(__name__)
 
-# Empty until REQ01 adds thread tables. Do not copy civic readiness sets.
-REQUIRED_READINESS_TABLES: frozenset[str] = frozenset()
+# Four 01-08 shell tables. Do not copy civic readiness sets.
+REQUIRED_READINESS_TABLES: frozenset[str] = frozenset(
+    {
+        "thread_threads",
+        "thread_comments",
+        "thread_reaction_marks",
+        "thread_attachment_refs",
+    }
+)
 
 
 @dataclass
@@ -102,7 +109,7 @@ class SupabaseDatabase:
             return False
 
     def required_tables_ready(self) -> bool:
-        """True while the readiness set is empty (future thread tables only)."""
+        """True only when every name in REQUIRED_READINESS_TABLES probes OK."""
         try:
             for table_name in REQUIRED_READINESS_TABLES:
                 self._request(

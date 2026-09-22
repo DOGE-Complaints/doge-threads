@@ -19,4 +19,6 @@ Prefix `thread_`. Civic / Story tables stay in the gateway repo.
 
 `202609220919_threads_01_08_shell_tables.sql` — four `thread_*` tables from domain fields + `created_at`; RLS + `service_role` all (gateway class).
 
-Readiness (`/ready`) still does not require these names until STORY-THREADS-01-11 fills `REQUIRED_READINESS_TABLES`.
+## Prod ops (STORY-THREADS-01-11)
+
+Apply this folder to the shared node project **before** setting `DB_BACKEND=supabase` in production. `/ready` fail-closes if any of the four `thread_*` names is missing (`REQUIRED_READINESS_TABLES`). Process restart does not wipe PostgREST-backed rows. `DB_BACKEND=in_memory` stays for offline proofs. Live project is not required for default CI.

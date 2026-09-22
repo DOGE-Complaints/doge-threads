@@ -17,6 +17,9 @@ from core.infrastructure.in_memory_attachment_ref_store import InMemoryAttachmen
 from core.infrastructure.in_memory_discussion_store import InMemoryDiscussionStore
 from core.infrastructure.in_memory_reaction_marks_store import InMemoryReactionMarksStore
 from core.infrastructure.service_factory import DefaultThreadServiceFactory
+from core.infrastructure.supabase_attachment_ref_store import SupabaseAttachmentRefStore
+from core.infrastructure.supabase_discussion_store import SupabaseDiscussionStore
+from core.infrastructure.supabase_reaction_marks_store import SupabaseReactionMarksStore
 
 logger = logging.getLogger(__name__)
 
@@ -71,9 +74,14 @@ def provide_service_factory(config: AppConfig | None = None) -> ThreadServiceFac
         db_checks = {}
 
     thread_knobs = FixedThreadKnobs(max_depth=8)
-    discussion_store = InMemoryDiscussionStore(knobs=thread_knobs)
-    reaction_store = InMemoryReactionMarksStore(knobs=thread_knobs)
-    attachment_store = InMemoryAttachmentRefStore(knobs=thread_knobs)
+    if backend == "supabase" and supabase_db is not None:
+        discussion_store = SupabaseDiscussionStore(db=supabase_db, knobs=thread_knobs)
+        reaction_store = SupabaseReactionMarksStore(db=supabase_db, knobs=thread_knobs)
+        attachment_store = SupabaseAttachmentRefStore(db=supabase_db, knobs=thread_knobs)
+    else:
+        discussion_store = InMemoryDiscussionStore(knobs=thread_knobs)
+        reaction_store = InMemoryReactionMarksStore(knobs=thread_knobs)
+        attachment_store = InMemoryAttachmentRefStore(knobs=thread_knobs)
     write_orchestrator = ThreadWriteOrchestrator(
         gateway=build_gateway_client_from_config(resolved_config),
         write_gate=IdentityVerifiedWriteGate(
