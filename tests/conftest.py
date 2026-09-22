@@ -14,7 +14,9 @@ from core.logging_setup import configure_logging
 @pytest.fixture(autouse=True)
 def _block_dotenv_leakage(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
     """Keep offline tests on in_memory and off live Supabase credentials."""
-    if request.node.get_closest_marker("live_integration"):
+    if request.node.get_closest_marker("live_integration") or request.node.get_closest_marker(
+        "domain_e2e"
+    ):
         return
     monkeypatch.setenv("DB_BACKEND", "in_memory")
     monkeypatch.setenv("SUPABASE_URL", "")
