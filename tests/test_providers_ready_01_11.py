@@ -173,7 +173,3 @@ def test_persist_roundtrip_survives_new_client() -> None:
     listed = marks_reader.list_marks(target)
     assert [item.reaction_id for item in listed] == ["acknowledge"]
 
-
-@pytest.mark.live_integration
-def test_optional_live_integration_not_required() -> None:
-    pytest.skip("optional live_integration; live not required for Done")

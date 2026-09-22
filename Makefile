@@ -1,4 +1,4 @@
-.PHONY: serve dev check-env test
+.PHONY: serve dev check-env test test-live
 
 # Default local PORT=8001 (gateway uses 8000).
 # serve/dev load .env when present. asgi_app lands in STORY-THREADS-00-03.
@@ -26,3 +26,8 @@ check-env:
 # Offline pytest (excludes reserved live_integration marker).
 test:
 	python3 -m pytest tests/ -q -m "not live_integration"
+
+# Live PostgREST (TC-05). Skip only if SUPABASE_URL / SUPABASE_SERVICE_ROLE absent.
+test-live:
+	@if [ -f ./.env ]; then set -a && . ./.env && set +a; fi; \
+	python3 -m pytest tests/ -q -m live_integration
