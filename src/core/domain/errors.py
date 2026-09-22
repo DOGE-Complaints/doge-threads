@@ -32,3 +32,27 @@ class StoryNarrativeError(ThreadContextError):
 
 class WriteDeniedError(Exception):
     """Raised when a thread write is denied by the verified-boolean gate."""
+
+
+class ReactionMarkError(Exception):
+    """Base error for reaction mark store operations."""
+
+
+class UnknownReactionIdError(ReactionMarkError):
+    """Raised when reaction_id is not a reactions.v1 catalog id."""
+
+
+class ReactionDisabledError(ReactionMarkError):
+    """Raised when knobs disable this reaction_id."""
+
+
+class ReactionMutexError(ReactionMarkError):
+    """Raised when agree and disagree would both apply on the same target."""
+
+
+class ReactionLayerError(ReactionMarkError):
+    """Raised when a mark violates catalog layer / target rules."""
+
+
+class MaxReactionsExceededError(ReactionMarkError):
+    """Raised when actor marks on a target exceed knobs.max_reactions_per_actor."""

@@ -4,6 +4,7 @@ from collections.abc import Mapping
 from typing import Any, Protocol
 
 from core.domain.comment import Comment
+from core.domain.reaction_mark import ReactionMark, ReactionTarget
 from core.domain.thread_context import IssueProjection, ThreadContext
 from core.domain.thread_key import Thread, ThreadKey
 
@@ -61,6 +62,18 @@ class WriteGate(Protocol):
 
     def allow_write(self, bearer_token: str) -> bool:
         """Return True only for method-opaque identity_verified is True."""
+        ...
+
+
+class ReactionMarksStore(Protocol):
+    """Store catalog reaction marks. No ranking / voice-weight application."""
+
+    def add_mark(self, mark: ReactionMark) -> ReactionMark:
+        """Persist a mark or reject per catalog / knobs rules."""
+        ...
+
+    def list_marks(self, target: ReactionTarget) -> list[ReactionMark]:
+        """Return marks for a target in insertion order."""
         ...
 
 
