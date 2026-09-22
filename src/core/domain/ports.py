@@ -56,6 +56,14 @@ class ThreadKeyPort(Protocol):
         ...
 
 
+class WriteGate(Protocol):
+    """Allow a thread write only when identity_verified is True."""
+
+    def allow_write(self, bearer_token: str) -> bool:
+        """Return True only for method-opaque identity_verified is True."""
+        ...
+
+
 class DiscussionStore(ThreadKeyPort, Protocol):
     """In-process discussion store: thread key + nested comment tree."""
 

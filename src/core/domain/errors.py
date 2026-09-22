@@ -28,3 +28,7 @@ class ThreadContextError(Exception):
 
 class StoryNarrativeError(ThreadContextError):
     """Raised when Story narrative keys appear in settings or composed context."""
+
+
+class WriteDeniedError(Exception):
+    """Raised when a thread write is denied by the verified-boolean gate."""

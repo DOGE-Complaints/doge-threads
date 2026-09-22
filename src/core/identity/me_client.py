@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -48,6 +49,19 @@ class IdentityMeClient:
         if not isinstance(body, dict):
             raise IdentityMeError("Identity /me returned non-object JSON.")
         return body
+
+
+def parse_me_identity_verified(body: Mapping[str, Any]) -> bool | None:
+    """Parse data.identity_verified only (gateway etalon; missing → None)."""
+    data = body.get("data")
+    if not isinstance(data, Mapping):
+        raise IdentityMeError("Invalid /me response: missing data object.")
+    if "identity_verified" not in data:
+        return None
+    raw = data.get("identity_verified")
+    if not isinstance(raw, bool):
+        raise IdentityMeError("Invalid /me response: identity_verified must be bool.")
+    return raw
 
 
 def build_identity_me_from_config(config: AppConfig) -> IdentityMeClient | None:
