@@ -1,8 +1,12 @@
+from core.domain.attachment_ref import AttachmentRef
 from core.domain.comment import Comment
 from core.domain.errors import (
+    AttachmentRefError,
     DepthExceededError,
     DiscussionStoreError,
+    LegalFloorError,
     MaxReactionsExceededError,
+    MediaTypeNotAllowedError,
     ReactionDisabledError,
     ReactionLayerError,
     ReactionMarkError,
@@ -15,7 +19,9 @@ from core.domain.errors import (
 )
 from core.domain.knobs import FixedThreadKnobs
 from core.domain.ports import (
+    AttachmentRefStore,
     DiscussionStore,
+    MediaFloor,
     ReactionMarksStore,
     ThreadContextPort,
     ThreadKeyPort,
@@ -28,6 +34,9 @@ from core.domain.thread_context import IssueProjection, ThreadContext
 from core.domain.thread_key import CIVIC_FIRST_ENTITY_TYPE, Thread, ThreadKey
 
 __all__ = [
+    "AttachmentRef",
+    "AttachmentRefError",
+    "AttachmentRefStore",
     "CATALOG_REACTION_IDS",
     "CIVIC_FIRST_ENTITY_TYPE",
     "Comment",
@@ -36,7 +45,10 @@ __all__ = [
     "DiscussionStoreError",
     "FixedThreadKnobs",
     "IssueProjection",
+    "LegalFloorError",
     "MaxReactionsExceededError",
+    "MediaFloor",
+    "MediaTypeNotAllowedError",
     "REACTION_LAYER",
     "ReactionDisabledError",
     "ReactionLayerError",

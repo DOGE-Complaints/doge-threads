@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, Protocol
 
+from core.domain.attachment_ref import AttachmentRef
 from core.domain.comment import Comment
 from core.domain.reaction_mark import ReactionMark, ReactionTarget
 from core.domain.thread_context import IssueProjection, ThreadContext
@@ -74,6 +75,26 @@ class ReactionMarksStore(Protocol):
 
     def list_marks(self, target: ReactionTarget) -> list[ReactionMark]:
         """Return marks for a target in insertion order."""
+        ...
+
+
+class MediaFloor(Protocol):
+    """Platform legal media floor. Node knobs cannot disable this hook."""
+
+    def honour(self, ref: AttachmentRef) -> None:
+        """Reject CSAM / catastrophic before a ref is stored. Not a scanner vendor."""
+        ...
+
+
+class AttachmentRefStore(Protocol):
+    """Persist attachment references only. No byte store."""
+
+    def accept_ref(self, ref: AttachmentRef) -> AttachmentRef:
+        """Honour floor, then allowlist, then persist the reference."""
+        ...
+
+    def list_refs(self, comment_id: str) -> list[AttachmentRef]:
+        """Return refs for a comment in insertion order."""
         ...
 
 

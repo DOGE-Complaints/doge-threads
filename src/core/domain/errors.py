@@ -56,3 +56,15 @@ class ReactionLayerError(ReactionMarkError):
 
 class MaxReactionsExceededError(ReactionMarkError):
     """Raised when actor marks on a target exceed knobs.max_reactions_per_actor."""
+
+
+class AttachmentRefError(Exception):
+    """Base error for attachment reference store operations."""
+
+
+class MediaTypeNotAllowedError(AttachmentRefError):
+    """Raised when media_type is outside knobs.media_allowed_types."""
+
+
+class LegalFloorError(AttachmentRefError):
+    """Raised when the platform legal media floor blocks CSAM / catastrophic."""
