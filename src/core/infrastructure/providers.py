@@ -6,8 +6,10 @@ from os import environ
 from core.application.factory import ThreadServiceFactory
 from core.config import AppConfig, load_config_from_env
 from core.config.env_file import merge_dotenv_from_cwd
+from core.domain.knobs import FixedThreadKnobs
 from core.infrastructure.db_sqlite import SqliteDatabase
 from core.infrastructure.db_supabase import SupabaseDatabase
+from core.infrastructure.in_memory_discussion_store import InMemoryDiscussionStore
 from core.infrastructure.service_factory import DefaultThreadServiceFactory
 
 logger = logging.getLogger(__name__)
@@ -62,9 +64,13 @@ def provide_service_factory(config: AppConfig | None = None) -> ThreadServiceFac
         db_ready = False
         db_checks = {}
 
+    thread_knobs = FixedThreadKnobs(max_depth=8)
+    discussion_store = InMemoryDiscussionStore(knobs=thread_knobs)
     return DefaultThreadServiceFactory(
         config=resolved_config,
         db_backend=backend,
+        discussion_store=discussion_store,
+        thread_knobs=thread_knobs,
         db_ready=db_ready,
         db_checks=db_checks,
         supabase_db=supabase_db,
