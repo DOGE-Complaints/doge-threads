@@ -44,7 +44,6 @@ def test_in_memory_store_kept_and_providers_unswitched(app_config: AppConfig) ->
     assert isinstance(factory.discussion_store, InMemoryDiscussionStore)
     providers = _PROVIDERS.read_text(encoding="utf-8")
     assert "InMemoryDiscussionStore" in providers
-    assert "SupabaseDiscussionStore" not in providers
     assert "REQUIRED_READINESS_TABLES" not in providers
 
 

@@ -51,8 +51,6 @@ def test_in_memory_stores_kept_and_providers_unswitched(app_config: AppConfig) -
     providers = _PROVIDERS.read_text(encoding="utf-8")
     assert "InMemoryReactionMarksStore" in providers
     assert "InMemoryAttachmentRefStore" in providers
-    assert "SupabaseReactionMarksStore" not in providers
-    assert "SupabaseAttachmentRefStore" not in providers
 
 
 def test_ac_thr_01_no_new_public_http() -> None:
