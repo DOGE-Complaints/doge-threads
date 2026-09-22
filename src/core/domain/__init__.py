@@ -26,6 +26,7 @@ from core.domain.ports import (
     ThreadContextPort,
     ThreadKeyPort,
     ThreadKnobs,
+    ThreadWritePort,
     WriteGate,
 )
 from core.domain.reaction_catalog import CATALOG_REACTION_IDS, REACTION_LAYER
@@ -66,6 +67,7 @@ __all__ = [
     "ThreadKeyPort",
     "ThreadKnobs",
     "ThreadNotFoundError",
+    "ThreadWritePort",
     "UnknownReactionIdError",
     "WriteDeniedError",
     "WriteGate",

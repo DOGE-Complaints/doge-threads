@@ -4,12 +4,18 @@ import logging
 from os import environ
 
 from core.application.factory import ThreadServiceFactory
+from core.application.write_gate import IdentityVerifiedWriteGate
+from core.application.write_orchestrator import ThreadWriteOrchestrator
 from core.config import AppConfig, load_config_from_env
 from core.config.env_file import merge_dotenv_from_cwd
 from core.domain.knobs import FixedThreadKnobs
+from core.gateway.client import build_gateway_client_from_config
+from core.identity.me_client import build_identity_me_from_config
 from core.infrastructure.db_sqlite import SqliteDatabase
 from core.infrastructure.db_supabase import SupabaseDatabase
+from core.infrastructure.in_memory_attachment_ref_store import InMemoryAttachmentRefStore
 from core.infrastructure.in_memory_discussion_store import InMemoryDiscussionStore
+from core.infrastructure.in_memory_reaction_marks_store import InMemoryReactionMarksStore
 from core.infrastructure.service_factory import DefaultThreadServiceFactory
 
 logger = logging.getLogger(__name__)
@@ -66,11 +72,23 @@ def provide_service_factory(config: AppConfig | None = None) -> ThreadServiceFac
 
     thread_knobs = FixedThreadKnobs(max_depth=8)
     discussion_store = InMemoryDiscussionStore(knobs=thread_knobs)
+    reaction_store = InMemoryReactionMarksStore(knobs=thread_knobs)
+    attachment_store = InMemoryAttachmentRefStore(knobs=thread_knobs)
+    write_orchestrator = ThreadWriteOrchestrator(
+        gateway=build_gateway_client_from_config(resolved_config),
+        write_gate=IdentityVerifiedWriteGate(
+            build_identity_me_from_config(resolved_config)
+        ),
+        discussion_store=discussion_store,
+        reaction_store=reaction_store,
+        attachment_store=attachment_store,
+    )
     return DefaultThreadServiceFactory(
         config=resolved_config,
         db_backend=backend,
         discussion_store=discussion_store,
         thread_knobs=thread_knobs,
+        write_orchestrator=write_orchestrator,
         db_ready=db_ready,
         db_checks=db_checks,
         supabase_db=supabase_db,

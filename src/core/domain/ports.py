@@ -98,6 +98,40 @@ class AttachmentRefStore(Protocol):
         ...
 
 
+class ThreadWritePort(Protocol):
+    """Arch §3 write kinds. Domain/application API only — no public HTTP."""
+
+    def write_comment(
+        self,
+        bearer_token: str,
+        issue_id: str,
+        key: ThreadKey,
+        body: str,
+        *,
+        parent_id: str | None = None,
+    ) -> Comment:
+        """Compose-pull → verify → depth enforce → persist comment."""
+        ...
+
+    def write_reaction(
+        self,
+        bearer_token: str,
+        issue_id: str,
+        mark: ReactionMark,
+    ) -> ReactionMark:
+        """Compose-pull → verify → enable/max → persist mark."""
+        ...
+
+    def write_attachment_ref(
+        self,
+        bearer_token: str,
+        issue_id: str,
+        ref: AttachmentRef,
+    ) -> AttachmentRef:
+        """Compose-pull → verify → allowlist+floor → persist ref."""
+        ...
+
+
 class DiscussionStore(ThreadKeyPort, Protocol):
     """In-process discussion store: thread key + nested comment tree."""
 

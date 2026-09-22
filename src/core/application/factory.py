@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from core.config import AppConfig
-from core.domain.ports import DiscussionStore, ThreadKnobs
+from core.domain.ports import DiscussionStore, ThreadKnobs, ThreadWritePort
 
 
 class ThreadServiceFactory(Protocol):
@@ -22,4 +22,9 @@ class ThreadServiceFactory(Protocol):
     @property
     def thread_knobs(self) -> ThreadKnobs:
         """Return injected tree knobs (not a pack loader)."""
+        ...
+
+    @property
+    def write_orchestrator(self) -> ThreadWritePort:
+        """Return the arch §3 write orchestrator (domain API, not HTTP)."""
         ...
