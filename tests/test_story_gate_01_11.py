@@ -66,5 +66,5 @@ def test_ac_thr_01_no_new_public_http() -> None:
     asgi = _ASGI.read_text(encoding="utf-8")
     assert '@app.put("/threads/issues/{issue_id}/reactions")' in asgi
     assert '@app.put("/threads/by-issue' not in asgi
-    assert '@app.post("/threads/issues/{issue_id}/attachment-refs' not in asgi
+    assert '@app.post("/threads/issues/{issue_id}/attachment-refs")' in asgi
     assert "CREATE TABLE" not in asgi
