@@ -12,6 +12,7 @@ from fastapi.responses import JSONResponse
 from core.api.dependencies import ApiDependencies, build_api_dependencies
 from core.api.envelope import build_error_envelope, ensure_trace_id
 from core.api.handlers import handle_health, handle_readiness
+from core.api.social_handlers import handle_knobs, handle_tree
 from core.api.product_auth import product_write_bearer as apply_product_write_bearer
 from core.api.security import UnauthorizedError
 from core.config import ConfigError
@@ -200,4 +201,23 @@ async def readiness(
     deps: ApiDependencies = Depends(get_api_dependencies),
 ) -> JSONResponse:
     payload = handle_readiness(deps, trace_id=_read_trace_id(request))
+    return JSONResponse(content=payload, status_code=_json_http_status(payload))
+
+
+@app.get("/threads/knobs")
+async def threads_knobs(
+    request: Request,
+    deps: ApiDependencies = Depends(get_api_dependencies),
+) -> JSONResponse:
+    payload = handle_knobs(deps, trace_id=_read_trace_id(request))
+    return JSONResponse(content=payload, status_code=_json_http_status(payload))
+
+
+@app.get("/threads/issues/{issue_id}")
+async def threads_tree(
+    issue_id: str,
+    request: Request,
+    deps: ApiDependencies = Depends(get_api_dependencies),
+) -> JSONResponse:
+    payload = handle_tree(deps, issue_id, trace_id=_read_trace_id(request))
     return JSONResponse(content=payload, status_code=_json_http_status(payload))

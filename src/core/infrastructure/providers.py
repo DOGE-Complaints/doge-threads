@@ -73,7 +73,7 @@ def provide_service_factory(config: AppConfig | None = None) -> ThreadServiceFac
         db_ready = False
         db_checks = {}
 
-    thread_knobs = FixedThreadKnobs(max_depth=8)
+    thread_knobs = FixedThreadKnobs(max_depth=8, max_reactions_per_actor=3)
     if backend == "supabase" and supabase_db is not None:
         discussion_store = SupabaseDiscussionStore(db=supabase_db, knobs=thread_knobs)
         reaction_store = SupabaseReactionMarksStore(db=supabase_db, knobs=thread_knobs)

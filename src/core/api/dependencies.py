@@ -5,7 +5,7 @@ from functools import lru_cache
 
 from core.api.security import ServiceTokenAuth, build_service_auth_from_env
 from core.config import AppConfig
-from core.domain.ports import ThreadWritePort
+from core.domain.ports import DiscussionStore, ThreadKnobs, ThreadWritePort
 from core.gateway.client import GatewayClient, build_gateway_client_from_config
 from core.identity.me_client import IdentityMeClient, build_identity_me_from_config
 from core.infrastructure.providers import provide_service_factory
@@ -23,6 +23,8 @@ class ApiDependencies:
     identity_me: IdentityMeClient | None = None
     gateway: GatewayClient | None = None
     write_orchestrator: ThreadWritePort | None = None
+    discussion_store: DiscussionStore | None = None
+    thread_knobs: ThreadKnobs | None = None
 
 
 @lru_cache(maxsize=1)
@@ -38,4 +40,6 @@ def build_api_dependencies() -> ApiDependencies:
         identity_me=build_identity_me_from_config(factory.config),
         gateway=build_gateway_client_from_config(factory.config),
         write_orchestrator=factory.write_orchestrator,
+        discussion_store=factory.discussion_store,
+        thread_knobs=factory.thread_knobs,
     )
