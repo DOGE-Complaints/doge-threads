@@ -34,6 +34,8 @@ class AppConfig:
     log_format: str
     identity_base_url: str | None
     gateway_base_url: str | None
+    dogestonia_schema_id: str | None
+    dogestonia_schema_version: str | None
 
 
 ENV_SCHEMA: tuple[EnvSpec, ...] = (
@@ -99,6 +101,24 @@ ENV_SCHEMA: tuple[EnvSpec, ...] = (
         required=False,
         default=None,
         description="Civic gateway base URL for outbound ThreadContext pull.",
+    ),
+    EnvSpec(
+        name="DOGESTONIA_SCHEMA_ID",
+        required=False,
+        default=None,
+        description=(
+            "ThreadKey.node value (S1). Not concatenated with VERSION. "
+            "Social routes that need ThreadKey fail closed if empty (HTTP-02+)."
+        ),
+    ),
+    EnvSpec(
+        name="DOGESTONIA_SCHEMA_VERSION",
+        required=False,
+        default=None,
+        description=(
+            "Cross-service schema version parity (e.g. v3). "
+            "Not part of ThreadKey.node (S1). Empty VERSION boot = Open U3."
+        ),
     ),
 )
 
@@ -216,4 +236,6 @@ def load_config_from_env(env: Mapping[str, str] | None = None) -> AppConfig:
         log_format=log_format,
         identity_base_url=_optional_http_url(source, name="IDENTITY_BASE_URL"),
         gateway_base_url=_optional_http_url(source, name="GATEWAY_BASE_URL"),
+        dogestonia_schema_id=_get_value(source, "DOGESTONIA_SCHEMA_ID"),
+        dogestonia_schema_version=_get_value(source, "DOGESTONIA_SCHEMA_VERSION"),
     )

@@ -4,7 +4,16 @@ from dataclasses import asdict, dataclass, field
 from typing import Any
 from uuid import uuid4
 
+from core.api.security import UnauthorizedError
 from core.config import ConfigError
+from core.domain.errors import (
+    AttachmentRefError,
+    DiscussionStoreError,
+    ReactionMarkError,
+    ThreadContextError,
+    WriteDeniedError,
+)
+from core.identity.me_client import IdentityMeError
 
 
 @dataclass(frozen=True)
@@ -54,10 +63,47 @@ def build_error_envelope(
 ) -> ErrorEnvelope:
     """Map a raised exception to the slim JSON error envelope.
 
-    Auth and geo exception types are omitted (later stories).
+    Auth: UnauthorizedError → UNAUTHORIZED; WriteDeniedError / IdentityMeError
+    → FORBIDDEN (FE §3/§8 verify handoff). Domain *Error → DOMAIN_ERROR.
     """
     resolved_trace_id = ensure_trace_id(trace_id)
     payload = details or {}
+
+    if isinstance(exc, UnauthorizedError):
+        return ErrorEnvelope(
+            error=ErrorBody(
+                code="UNAUTHORIZED",
+                type="auth",
+                message=str(exc) or "Unauthorized.",
+                details=payload,
+            ),
+            trace_id=resolved_trace_id,
+        )
+
+    if isinstance(exc, (WriteDeniedError, IdentityMeError)):
+        return ErrorEnvelope(
+            error=ErrorBody(
+                code="FORBIDDEN",
+                type="auth",
+                message=str(exc) or "Write denied.",
+                details=payload,
+            ),
+            trace_id=resolved_trace_id,
+        )
+
+    if isinstance(
+        exc,
+        (DiscussionStoreError, ThreadContextError, ReactionMarkError, AttachmentRefError),
+    ):
+        return ErrorEnvelope(
+            error=ErrorBody(
+                code="DOMAIN_ERROR",
+                type="domain",
+                message=str(exc),
+                details=payload,
+            ),
+            trace_id=resolved_trace_id,
+        )
 
     if isinstance(exc, ConfigError):
         return ErrorEnvelope(
