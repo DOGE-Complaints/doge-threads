@@ -64,6 +64,25 @@ class SupabaseReactionMarksStore:
             return mark
         return mark_from_row(row)
 
+    def remove_mark(self, mark: ReactionMark) -> None:
+        params: dict[str, str] = {
+            "actor_id": f"eq.{mark.actor_id}",
+            "node": f"eq.{mark.target.thread_key.node}",
+            "entity_type": f"eq.{mark.target.thread_key.entity_type}",
+            "entity_id": f"eq.{mark.target.thread_key.entity_id}",
+            "target_kind": f"eq.{mark.target.kind}",
+            "reaction_id": f"eq.{mark.reaction_id}",
+        }
+        if mark.target.comment_id is None:
+            params["comment_id"] = "is.null"
+        else:
+            params["comment_id"] = f"eq.{mark.target.comment_id}"
+        self._db._request(
+            method="DELETE",
+            path=f"/rest/v1/{MARKS_TABLE}",
+            params=params,
+        )
+
     def list_marks(self, target: ReactionTarget) -> list[ReactionMark]:
         params: dict[str, str] = {
             "select": "actor_id,node,entity_type,entity_id,target_kind,comment_id,reaction_id",

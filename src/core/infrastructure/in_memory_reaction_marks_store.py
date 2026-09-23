@@ -50,6 +50,17 @@ class InMemoryReactionMarksStore:
         self._marks.append(mark)
         return mark
 
+    def remove_mark(self, mark: ReactionMark) -> None:
+        self._marks = [
+            item
+            for item in self._marks
+            if not (
+                item.actor_id == mark.actor_id
+                and item.target == mark.target
+                and item.reaction_id == mark.reaction_id
+            )
+        ]
+
     def list_marks(self, target: ReactionTarget) -> list[ReactionMark]:
         return [item for item in self._marks if item.target == target]
 

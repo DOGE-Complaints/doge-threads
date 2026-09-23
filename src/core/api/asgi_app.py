@@ -12,7 +12,14 @@ from fastapi.responses import JSONResponse
 from core.api.dependencies import ApiDependencies, build_api_dependencies
 from core.api.envelope import build_error_envelope, ensure_trace_id
 from core.api.handlers import handle_health, handle_readiness
-from core.api.social_handlers import CommentWriteBody, handle_create_comment, handle_knobs, handle_tree
+from core.api.social_handlers import (
+    CommentWriteBody,
+    ReactionWriteBody,
+    handle_create_comment,
+    handle_knobs,
+    handle_reaction,
+    handle_tree,
+)
 from core.api.product_auth import product_write_bearer as apply_product_write_bearer
 from core.api.security import UnauthorizedError
 from core.config import ConfigError
@@ -68,11 +75,11 @@ app = FastAPI(
     openapi_url=None,
 )
 
-# HTTP-01: keep CORS as-is (U4 lockdown OOS). Do not add PUT here.
+# HTTP-04: PUT required for reactions (U4 origin lockdown still OOS).
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "OPTIONS"],
     allow_headers=["x-trace-id", "authorization"],
 )
 
@@ -232,6 +239,24 @@ async def threads_create_comment(
     deps: ApiDependencies = Depends(get_api_dependencies),
 ) -> JSONResponse:
     body = handle_create_comment(
+        deps,
+        issue_id,
+        payload,
+        token,
+        trace_id=_read_trace_id(request),
+    )
+    return JSONResponse(content=body, status_code=_json_http_status(body))
+
+
+@app.put("/threads/issues/{issue_id}/reactions")
+async def threads_reaction(
+    issue_id: str,
+    request: Request,
+    payload: ReactionWriteBody,
+    token: str = Depends(product_write_bearer),
+    deps: ApiDependencies = Depends(get_api_dependencies),
+) -> JSONResponse:
+    body = handle_reaction(
         deps,
         issue_id,
         payload,

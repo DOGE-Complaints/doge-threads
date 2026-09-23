@@ -51,6 +51,17 @@ class IdentityMeClient:
         return body
 
 
+def parse_me_actor_id(body: Mapping[str, Any]) -> str:
+    """Actor id from existing /me `data.supabase_user_id` (identity etalon)."""
+    data = body.get("data")
+    if not isinstance(data, Mapping):
+        raise IdentityMeError("Invalid /me response: missing data object.")
+    raw = data.get("supabase_user_id")
+    if not isinstance(raw, str) or not raw.strip():
+        raise IdentityMeError("Invalid /me response: supabase_user_id must be a non-empty string.")
+    return raw.strip()
+
+
 def parse_me_identity_verified(body: Mapping[str, Any]) -> bool | None:
     """Parse data.identity_verified only (gateway etalon; missing → None)."""
     data = body.get("data")

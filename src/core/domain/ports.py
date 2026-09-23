@@ -73,6 +73,10 @@ class ReactionMarksStore(Protocol):
         """Persist a mark or reject per catalog / knobs rules."""
         ...
 
+    def remove_mark(self, mark: ReactionMark) -> None:
+        """Drop actor × target × reaction_id if present (idempotent)."""
+        ...
+
     def list_marks(self, target: ReactionTarget) -> list[ReactionMark]:
         """Return marks for a target in insertion order."""
         ...
@@ -120,6 +124,19 @@ class ThreadWritePort(Protocol):
         mark: ReactionMark,
     ) -> ReactionMark:
         """Compose-pull → verify → enable/max → persist mark."""
+        ...
+
+    def remove_reaction(
+        self,
+        bearer_token: str,
+        issue_id: str,
+        mark: ReactionMark,
+    ) -> None:
+        """Compose-pull → verify → drop mark (FE op=remove)."""
+        ...
+
+    def list_reaction_marks(self, target: ReactionTarget) -> list[ReactionMark]:
+        """Return marks for a target (U2 aggregates)."""
         ...
 
     def write_attachment_ref(

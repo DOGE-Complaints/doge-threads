@@ -11,7 +11,7 @@ from core.domain.ports import (
     ReactionMarksStore,
     WriteGate,
 )
-from core.domain.reaction_mark import ReactionMark
+from core.domain.reaction_mark import ReactionMark, ReactionTarget
 from core.domain.thread_context import ThreadContext
 from core.domain.thread_key import ThreadKey
 from core.gateway.client import GatewayClient
@@ -65,6 +65,21 @@ class ThreadWriteOrchestrator:
         self._compose(issue_id)
         assert_write_allowed(self._gate, bearer_token)
         return self._reactions.add_mark(mark)
+
+    def remove_reaction(
+        self,
+        bearer_token: str,
+        issue_id: str,
+        mark: ReactionMark,
+    ) -> None:
+        """Compose-pull → identity_verified → drop mark (idempotent)."""
+        self._compose(issue_id)
+        assert_write_allowed(self._gate, bearer_token)
+        self._reactions.remove_mark(mark)
+
+    def list_reaction_marks(self, target: ReactionTarget) -> list[ReactionMark]:
+        """Read marks for a target after a write (U2 aggregates)."""
+        return self._reactions.list_marks(target)
 
     def write_attachment_ref(
         self,
