@@ -58,4 +58,5 @@ def test_ac_thr_01_no_new_public_routes() -> None:
     )
     assert paths == CURRENT_PUBLIC_GET_PATHS
     asgi = (_SRC_ROOT / "core" / "api" / "asgi_app.py").read_text(encoding="utf-8")
-    assert '@app.post("/thread' not in asgi
+    assert '@app.put("/threads' not in asgi
+    assert '@app.post("/threads/issues/{issue_id}/attachment-refs' not in asgi

@@ -8,6 +8,7 @@ CURRENT_PUBLIC_GET_PATHS = [
     "/health",
     "/ready",
     "/threads/issues/{issue_id}",
+    "/threads/issues/{issue_id}/comments",
     "/threads/knobs",
 ]
 

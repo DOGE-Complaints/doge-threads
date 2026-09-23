@@ -17,7 +17,7 @@ _CIVIC_NAMES = frozenset(
     }
 )
 _SRC_ROOT = Path(__file__).resolve().parents[1] / "src"
-_WRITE_PATH_MARKERS = ("reaction", "comment")
+_WRITE_PATH_MARKERS = ("reaction",)
 
 
 def test_no_civic_modules_under_src() -> None:

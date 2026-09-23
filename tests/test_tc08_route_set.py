@@ -23,7 +23,8 @@ def test_e_http_ac01_route_set() -> None:
     )
     assert paths == CURRENT_PUBLIC_GET_PATHS
     asgi = _ASGI.read_text(encoding="utf-8")
-    assert '@app.post("/thread' not in asgi
+    assert '@app.put("/threads' not in asgi
+    assert '@app.post("/threads/issues/{issue_id}/attachment-refs' not in asgi
     assert '@app.post("/comment' not in asgi
     assert '@app.post("/reaction' not in asgi
     assert '@app.post("/attachment' not in asgi

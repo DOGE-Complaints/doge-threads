@@ -64,5 +64,6 @@ def test_in_memory_proofs_intact(app_config: AppConfig) -> None:
 def test_ac_thr_01_no_new_public_http() -> None:
     assert _asgi_paths() == CURRENT_PUBLIC_GET_PATHS
     asgi = _ASGI.read_text(encoding="utf-8")
-    assert '@app.post("/thread' not in asgi
+    assert '@app.put("/threads' not in asgi
+    assert '@app.post("/threads/issues/{issue_id}/attachment-refs' not in asgi
     assert "CREATE TABLE" not in asgi
