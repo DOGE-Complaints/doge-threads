@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from fastapi.testclient import TestClient
 
 from core.api.asgi_app import app
@@ -27,4 +29,4 @@ def test_smoke_asgi_paths_health_ready_only() -> None:
             if getattr(route, "methods", None)
         }
     )
-    assert paths == ["/health", "/ready"]
+    assert paths == CURRENT_PUBLIC_GET_PATHS

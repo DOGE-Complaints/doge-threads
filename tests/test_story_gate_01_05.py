@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from dataclasses import fields
 from pathlib import Path
 
@@ -18,7 +20,7 @@ def test_asgi_still_health_ready_only() -> None:
         )
         if isinstance(path, str)
     )
-    assert paths == ["/health", "/ready"]
+    assert paths == CURRENT_PUBLIC_GET_PATHS
 
 
 def test_refs_only_no_byte_store_field() -> None:

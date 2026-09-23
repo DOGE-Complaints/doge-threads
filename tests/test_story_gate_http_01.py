@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from pathlib import Path
 
 from core.api.asgi_app import app, product_write_bearer
@@ -10,7 +12,7 @@ from core.config import ENV_SCHEMA
 _ROOT = Path(__file__).resolve().parents[1]
 _ASGI = _ROOT / "src" / "core" / "api" / "asgi_app.py"
 _EXAMPLE = _ROOT / "example.env"
-_PRODUCT_PREFIXES = ("/threads", "/comment", "/reaction", "/attachment")
+_WRITE_PREFIXES = ("/comment", "/reaction", "/attachment")
 
 
 def test_schema_and_example_env_have_dogestonia_keys() -> None:
@@ -26,7 +28,7 @@ def test_named_product_write_bearer_exists() -> None:
     assert product_write_bearer.__name__ == "product_write_bearer"
 
 
-def test_no_product_social_routes() -> None:
+def test_no_product_write_routes_yet() -> None:
     paths = sorted(
         path
         for path in (
@@ -34,9 +36,11 @@ def test_no_product_social_routes() -> None:
         )
         if isinstance(path, str)
     )
-    assert paths == ["/health", "/ready"]
+    assert paths == CURRENT_PUBLIC_GET_PATHS
     asgi = _ASGI.read_text(encoding="utf-8")
-    for prefix in _PRODUCT_PREFIXES:
+    for prefix in _WRITE_PREFIXES:
         assert f'@app.get("{prefix}' not in asgi
         assert f'@app.post("{prefix}' not in asgi
         assert f'@app.put("{prefix}' not in asgi
+    assert '@app.post("/threads' not in asgi
+    assert '@app.put("/threads' not in asgi

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from core.api.asgi_app import app
 from core.api.dependencies import build_api_dependencies
 from core.application.write_orchestrator import ThreadWriteOrchestrator
@@ -21,4 +23,4 @@ def test_di_wires_orchestrator_without_new_route() -> None:
         )
         if isinstance(path, str)
     )
-    assert paths == ["/health", "/ready"]
+    assert paths == CURRENT_PUBLIC_GET_PATHS

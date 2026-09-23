@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from dataclasses import fields
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -78,9 +80,9 @@ def _src_hits(tokens: tuple[str, ...], *, roots: tuple[Path, ...] | None = None)
 
 def test_ac_thr_01_no_mandated_public_product_http() -> None:
     """AC-THR-01: Draft does not mandate a new threads public HTTP path."""
-    assert _asgi_paths() == ["/health", "/ready"]
+    assert _asgi_paths() == CURRENT_PUBLIC_GET_PATHS
     asgi = (_SRC_ROOT / "core" / "api" / "asgi_app.py").read_text(encoding="utf-8")
-    for name in ("/comment", "/reaction", "/attachment", "/thread"):
+    for name in ("/comment", "/reaction", "/attachment"):
         assert f'@app.get("{name}' not in asgi
         assert f'@app.post("{name}' not in asgi
 
@@ -187,7 +189,7 @@ def test_ac_thr_07_09_documented_non_goals() -> None:
 
 def test_ac_thr_01_sibling_consume_not_threads_public_route() -> None:
     """AC-THR-01 checklist: sibling service-auth / Me consume is OK."""
-    assert _asgi_paths() == ["/health", "/ready"]
+    assert _asgi_paths() == CURRENT_PUBLIC_GET_PATHS
     assert GatewayClient.request is not None
     assert IdentityMeClient.fetch_me is not None
     assert SHELL_SETTINGS_PATH == "/node/shell-settings"

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from pathlib import Path
 
 from core.api.asgi_app import app
@@ -57,7 +59,7 @@ def test_columns_are_domain_plus_created_at() -> None:
 
 
 def test_ac_thr_01_ddl_is_not_public_http() -> None:
-    assert _asgi_paths() == ["/health", "/ready"]
+    assert _asgi_paths() == CURRENT_PUBLIC_GET_PATHS
     asgi = (
         Path(__file__).resolve().parents[1] / "src" / "core" / "api" / "asgi_app.py"
     ).read_text(encoding="utf-8")

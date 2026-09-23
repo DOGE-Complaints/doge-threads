@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from pathlib import Path
 
 from core.api.asgi_app import app
@@ -60,7 +62,7 @@ def test_in_memory_proofs_intact(app_config: AppConfig) -> None:
 
 
 def test_ac_thr_01_no_new_public_http() -> None:
-    assert _asgi_paths() == ["/health", "/ready"]
+    assert _asgi_paths() == CURRENT_PUBLIC_GET_PATHS
     asgi = _ASGI.read_text(encoding="utf-8")
     assert '@app.post("/thread' not in asgi
     assert "CREATE TABLE" not in asgi

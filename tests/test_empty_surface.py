@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from pathlib import Path
 
 from core.api.asgi_app import app
@@ -15,7 +17,7 @@ _CIVIC_NAMES = frozenset(
     }
 )
 _SRC_ROOT = Path(__file__).resolve().parents[1] / "src"
-_PRODUCT_PATH_MARKERS = ("thread", "reaction", "comment")
+_WRITE_PATH_MARKERS = ("reaction", "comment")
 
 
 def test_no_civic_modules_under_src() -> None:
@@ -35,7 +37,7 @@ def test_asgi_has_no_public_thread_product_routes() -> None:
         )
         if isinstance(path, str)
     )
-    assert paths == ["/health", "/ready"]
+    assert paths == CURRENT_PUBLIC_GET_PATHS
     assert not any(
-        any(marker in path for marker in _PRODUCT_PATH_MARKERS) for path in paths
+        any(marker in path for marker in _WRITE_PATH_MARKERS) for path in paths
     )

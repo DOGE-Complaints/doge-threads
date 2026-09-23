@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from pathlib import Path
 
 from core.api.asgi_app import app
@@ -18,7 +20,7 @@ def test_asgi_still_health_ready_only() -> None:
         )
         if isinstance(path, str)
     )
-    assert paths == ["/health", "/ready"]
+    assert paths == CURRENT_PUBLIC_GET_PATHS
 
 
 def test_no_method_flag_fallback_or_jwt_in_write_path() -> None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from pathlib import Path
 
 from core.api.asgi_app import app
@@ -19,7 +21,7 @@ def test_e_http_ac01_route_set() -> None:
         )
         if isinstance(path, str)
     )
-    assert paths == ["/health", "/ready"]
+    assert paths == CURRENT_PUBLIC_GET_PATHS
     asgi = _ASGI.read_text(encoding="utf-8")
     assert '@app.post("/thread' not in asgi
     assert '@app.post("/comment' not in asgi

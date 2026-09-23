@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 import inspect
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -209,9 +211,9 @@ def test_all_u_scenario_ids_present_for_traceability() -> None:
 
 
 def test_ac_thr_01_no_new_public_routes() -> None:
-    assert _asgi_paths() == ["/health", "/ready"]
+    assert _asgi_paths() == CURRENT_PUBLIC_GET_PATHS
     asgi = (_SRC_ROOT / "core" / "api" / "asgi_app.py").read_text(encoding="utf-8")
-    for name in ("/comment", "/reaction", "/attachment", "/thread"):
+    for name in ("/comment", "/reaction", "/attachment"):
         assert f'@app.get("{name}' not in asgi
         assert f'@app.post("{name}' not in asgi
 

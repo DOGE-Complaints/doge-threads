@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 import inspect
 from pathlib import Path
 
@@ -19,7 +21,7 @@ def test_asgi_still_health_ready_only() -> None:
         )
         if isinstance(path, str)
     )
-    assert paths == ["/health", "/ready"]
+    assert paths == CURRENT_PUBLIC_GET_PATHS
 
 
 def test_no_pack_loader_in_threads_src() -> None:

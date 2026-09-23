@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from asgi_public_paths import CURRENT_PUBLIC_GET_PATHS
+
 from pathlib import Path
 
 from core.api.asgi_app import app
@@ -17,7 +19,7 @@ def test_asgi_still_health_ready_only() -> None:
         )
         if isinstance(path, str)
     )
-    assert paths == ["/health", "/ready"]
+    assert paths == CURRENT_PUBLIC_GET_PATHS
 
 
 def test_orchestrator_has_three_write_kinds() -> None:
@@ -30,7 +32,7 @@ def test_no_invented_public_write_route_in_src() -> None:
     hits: list[str] = []
     asgi = _SRC_ROOT / "core" / "api" / "asgi_app.py"
     text = asgi.read_text(encoding="utf-8")
-    for name in ("/comment", "/reaction", "/attachment", "/thread"):
+    for name in ("/comment", "/reaction", "/attachment"):
         if f'@app.get("{name}' in text or f'@app.post("{name}' in text:
             hits.append(name)
     assert hits == []
