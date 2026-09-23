@@ -6,10 +6,12 @@ from typing import Any, Literal
 from pydantic import BaseModel
 
 from core.api.dependencies import ApiDependencies
-from core.api.envelope import build_success_envelope, ensure_trace_id
+from core.api.envelope import build_error_envelope, build_success_envelope, ensure_trace_id
 from core.api.thread_key_builder import build_issue_thread_key
 from core.config import ConfigError
+from core.domain.attachment_ref import FLOOR_OK, AttachmentRef
 from core.domain.comment import Comment
+from core.domain.errors import AttachmentRefError
 from core.domain.ports import ThreadKnobs
 from core.domain.reaction_mark import ReactionMark, ReactionTarget
 from core.identity.me_client import IdentityMeError, parse_me_actor_id
@@ -29,6 +31,15 @@ class ReactionWriteBody(BaseModel):
     comment_id: str | None = None
     reaction_id: str
     op: Literal["add", "remove"]
+
+
+class AttachmentWriteBody(BaseModel):
+    """FE §6 attachment-ref body. Optional floor_class is domain metadata (default ok)."""
+
+    ref_id: str
+    media_type: str
+    comment_id: str
+    floor_class: str = FLOOR_OK
 
 
 def knobs_snapshot(knobs: ThreadKnobs) -> dict[str, Any]:
@@ -189,5 +200,41 @@ def handle_reaction(
             actor_id=actor_id,
             marks=marks,
         ),
+        trace_id=ensure_trace_id(trace_id),
+    ).as_dict()
+
+
+def handle_create_attachment_ref(
+    dependencies: ApiDependencies,
+    issue_id: str,
+    payload: AttachmentWriteBody,
+    bearer_token: str,
+    trace_id: str | None = None,
+) -> dict[str, Any]:
+    """Thin wrap write_attachment_ref. Floor/allowlist → attach-denied envelope."""
+    orchestrator = dependencies.write_orchestrator
+    if orchestrator is None:
+        raise ConfigError("write_orchestrator is not wired")
+    ref = AttachmentRef(
+        ref_id=payload.ref_id,
+        media_type=payload.media_type,
+        comment_id=payload.comment_id,
+        floor_class=payload.floor_class,
+    )
+    try:
+        stored = orchestrator.write_attachment_ref(bearer_token, issue_id, ref)
+    except AttachmentRefError as exc:
+        return build_error_envelope(
+            exc,
+            trace_id=ensure_trace_id(trace_id),
+            details={"reason": "attach-denied"},
+        ).as_dict()
+    return build_success_envelope(
+        data={
+            "ref_id": stored.ref_id,
+            "media_type": stored.media_type,
+            "comment_id": stored.comment_id,
+            "floor_class": stored.floor_class,
+        },
         trace_id=ensure_trace_id(trace_id),
     ).as_dict()

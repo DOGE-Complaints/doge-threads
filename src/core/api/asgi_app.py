@@ -13,8 +13,10 @@ from core.api.dependencies import ApiDependencies, build_api_dependencies
 from core.api.envelope import build_error_envelope, ensure_trace_id
 from core.api.handlers import handle_health, handle_readiness
 from core.api.social_handlers import (
+    AttachmentWriteBody,
     CommentWriteBody,
     ReactionWriteBody,
+    handle_create_attachment_ref,
     handle_create_comment,
     handle_knobs,
     handle_reaction,
@@ -257,6 +259,24 @@ async def threads_reaction(
     deps: ApiDependencies = Depends(get_api_dependencies),
 ) -> JSONResponse:
     body = handle_reaction(
+        deps,
+        issue_id,
+        payload,
+        token,
+        trace_id=_read_trace_id(request),
+    )
+    return JSONResponse(content=body, status_code=_json_http_status(body))
+
+
+@app.post("/threads/issues/{issue_id}/attachment-refs")
+async def threads_create_attachment_ref(
+    issue_id: str,
+    request: Request,
+    payload: AttachmentWriteBody,
+    token: str = Depends(product_write_bearer),
+    deps: ApiDependencies = Depends(get_api_dependencies),
+) -> JSONResponse:
+    body = handle_create_attachment_ref(
         deps,
         issue_id,
         payload,
