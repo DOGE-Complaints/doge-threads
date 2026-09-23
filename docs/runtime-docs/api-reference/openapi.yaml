@@ -1,0 +1,522 @@
+openapi: 3.1.0
+info:
+  title: DOGEstonia Threads Runtime API
+  version: 0.1.0
+  summary: Runtime reference for Closed Ops + public social HTTP (HTTP-06)
+  description: |
+    This specification documents **as-is** Closed routes after HTTP-01…05 implement
+    and HTTP-06 Close:
+
+    - Ops: `GET /health`, `GET /ready` (`handlers.py`);
+    - Social: knobs, tree, comments, reactions, attachment-refs (`social_handlers.py`);
+    - verified inventory = `tests/asgi_public_paths.py` `CLOSED_HTTP_INVENTORY`.
+
+    Do not invent superseded FE draft path prefixes. Spa `ThreadsSocialClient`
+    wire is a separate spa wave.
+
+    Live FastAPI OpenAPI UI is disabled (`docs_url` / `openapi_url` = None).
+servers:
+  - url: http://127.0.0.1:8001
+    description: Local default (Makefile / example.env PORT=8001)
+tags:
+  - name: Ops
+    description: Operational endpoints mapped to existing handlers
+  - name: Social
+    description: Public social HTTP Closed in HTTP-02…05 (W2)
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Required on write routes (`product_write_bearer`).
+  schemas:
+    ErrorBody:
+      type: object
+      required: [code, type, message, details]
+      properties:
+        code:
+          type: string
+          examples:
+            - VALIDATION_ERROR
+            - DOMAIN_ERROR
+            - INFRASTRUCTURE_ERROR
+            - INTERNAL_ERROR
+            - UNAUTHORIZED
+        type:
+          type: string
+          examples: [validation, domain, infrastructure, internal, auth]
+        message:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+    ErrorEnvelope:
+      type: object
+      required: [error, trace_id]
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorBody'
+        trace_id:
+          type: string
+    HealthData:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          const: ok
+          example: ok
+    HealthEnvelope:
+      type: object
+      required: [data, trace_id]
+      properties:
+        data:
+          $ref: '#/components/schemas/HealthData'
+        trace_id:
+          type: string
+    DbChecks:
+      type: object
+      description: |
+        Backend-specific boolean map from `providers.provide_service_factory`:
+        - in_memory → `{ in_memory: true }`
+        - sqlite → `{ connectivity: <bool> }`
+        - supabase missing creds → `{ credentials: false }`
+        - supabase with creds → `{ credentials: true, tables: <bool> }`
+      additionalProperties:
+        type: boolean
+    DbReadiness:
+      type: object
+      required: [backend, ready, checks]
+      properties:
+        backend:
+          type: string
+          examples: [in_memory, sqlite, supabase]
+        ready:
+          type: boolean
+        checks:
+          $ref: '#/components/schemas/DbChecks'
+    ReadinessData:
+      type: object
+      required: [status, db]
+      properties:
+        status:
+          type: string
+          enum: [ready, degraded]
+          example: ready
+        db:
+          $ref: '#/components/schemas/DbReadiness'
+    ReadinessEnvelope:
+      type: object
+      required: [data, trace_id]
+      properties:
+        data:
+          $ref: '#/components/schemas/ReadinessData'
+        trace_id:
+          type: string
+    KnobsData:
+      type: object
+      required: [max_depth, max_reactions_per_actor, reactions_enable, media_allowed_types]
+      properties:
+        max_depth:
+          type: integer
+        max_reactions_per_actor:
+          type: integer
+        reactions_enable:
+          type: object
+          additionalProperties: true
+        media_allowed_types:
+          type: array
+          items:
+            type: string
+    KnobsEnvelope:
+      type: object
+      required: [data, trace_id]
+      properties:
+        data:
+          $ref: '#/components/schemas/KnobsData'
+        trace_id:
+          type: string
+    CommentItem:
+      type: object
+      required: [comment_id, parent_id, depth, body]
+      properties:
+        comment_id:
+          type: string
+        parent_id:
+          type: string
+          nullable: true
+        depth:
+          type: integer
+        body:
+          type: string
+    TreeData:
+      type: object
+      required: [issue_id, comments]
+      properties:
+        issue_id:
+          type: string
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommentItem'
+    TreeEnvelope:
+      type: object
+      required: [data, trace_id]
+      properties:
+        data:
+          $ref: '#/components/schemas/TreeData'
+        trace_id:
+          type: string
+    CommentWriteBody:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+        parent_id:
+          type: string
+          nullable: true
+    CommentEnvelope:
+      type: object
+      required: [data, trace_id]
+      properties:
+        data:
+          $ref: '#/components/schemas/CommentItem'
+        trace_id:
+          type: string
+    ReactionWriteBody:
+      type: object
+      required: [target_kind, reaction_id, op]
+      properties:
+        target_kind:
+          type: string
+          enum: [thread_root, comment]
+        comment_id:
+          type: string
+          nullable: true
+        reaction_id:
+          type: string
+        op:
+          type: string
+          enum: [add, remove]
+    ReactionMarkCount:
+      type: object
+      required: [reaction_id, count]
+      properties:
+        reaction_id:
+          type: string
+        count:
+          type: integer
+    ReactionData:
+      type: object
+      required: [issue_id, target_kind, comment_id, reaction_id, op, selected, summary_marks, aggregate_count]
+      properties:
+        issue_id:
+          type: string
+        target_kind:
+          type: string
+        comment_id:
+          type: string
+          nullable: true
+        reaction_id:
+          type: string
+        op:
+          type: string
+        selected:
+          type: array
+          items:
+            type: string
+        summary_marks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReactionMarkCount'
+        aggregate_count:
+          type: integer
+    ReactionEnvelope:
+      type: object
+      required: [data, trace_id]
+      properties:
+        data:
+          $ref: '#/components/schemas/ReactionData'
+        trace_id:
+          type: string
+    AttachmentWriteBody:
+      type: object
+      required: [ref_id, media_type, comment_id]
+      properties:
+        ref_id:
+          type: string
+        media_type:
+          type: string
+        comment_id:
+          type: string
+        floor_class:
+          type: string
+    AttachmentData:
+      type: object
+      required: [ref_id, media_type, comment_id, floor_class]
+      properties:
+        ref_id:
+          type: string
+        media_type:
+          type: string
+        comment_id:
+          type: string
+        floor_class:
+          type: string
+    AttachmentEnvelope:
+      type: object
+      required: [data, trace_id]
+      properties:
+        data:
+          $ref: '#/components/schemas/AttachmentData'
+        trace_id:
+          type: string
+  parameters:
+    TraceIdHeader:
+      name: x-trace-id
+      in: header
+      required: false
+      schema:
+        type: string
+      description: Optional correlation id; generated when absent (`ensure_trace_id`).
+paths:
+  /health:
+    get:
+      tags: [Ops]
+      operationId: getHealth
+      summary: Liveness probe
+      description: |
+        Process is up. No persistence or schema-pack checks.
+        Handler: `handle_health`.
+      parameters:
+        - $ref: '#/components/parameters/TraceIdHeader'
+      responses:
+        '200':
+          description: Liveness OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthEnvelope'
+              example:
+                data:
+                  status: ok
+                trace_id: trace-health-1
+        '500':
+          description: Config or unexpected failure envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /ready:
+    get:
+      tags: [Ops]
+      operationId: getReady
+      summary: Readiness probe
+      description: |
+        Readiness from DI `db_ready` / `db_checks` only (no pack/schema fields).
+        Handler: `handle_readiness`. HTTP 200 for both `ready` and `degraded`.
+      parameters:
+        - $ref: '#/components/parameters/TraceIdHeader'
+      responses:
+        '200':
+          description: Readiness envelope (ready or degraded)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadinessEnvelope'
+              examples:
+                inMemoryReady:
+                  summary: DB_BACKEND=in_memory
+                  value:
+                    data:
+                      status: ready
+                      db:
+                        backend: in_memory
+                        ready: true
+                        checks:
+                          in_memory: true
+                    trace_id: trace-ready-1
+                supabaseMissingCreds:
+                  summary: DB_BACKEND=supabase without credentials
+                  value:
+                    data:
+                      status: degraded
+                      db:
+                        backend: supabase
+                        ready: false
+                        checks:
+                          credentials: false
+                    trace_id: trace-ready-2
+        '500':
+          description: Config or unexpected failure envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /threads/knobs:
+    get:
+      tags: [Social]
+      operationId: getThreadsKnobs
+      summary: Node-level knobs snapshot
+      description: |
+        `FixedThreadKnobs` via `handle_knobs`. No `issue_id`. Public read.
+        Factory cap `max_reactions_per_actor` = 3 (HTTP-02 U1).
+      parameters:
+        - $ref: '#/components/parameters/TraceIdHeader'
+      responses:
+        '200':
+          description: Knobs envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KnobsEnvelope'
+  /threads/issues/{issue_id}:
+    get:
+      tags: [Social]
+      operationId: getThreadTree
+      summary: Thread tree (comments only)
+      description: |
+        `handle_tree` → `list_comments`. T1 — no knobs in body.
+        ThreadKey.node from `DOGESTONIA_SCHEMA_ID`.
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TraceIdHeader'
+      responses:
+        '200':
+          description: Tree envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TreeEnvelope'
+  /threads/issues/{issue_id}/comments:
+    post:
+      tags: [Social]
+      operationId: createThreadComment
+      summary: Create or reply to a comment
+      description: |
+        Bearer + `handle_create_comment` → `write_comment`.
+        Body `{ body, parent_id }` (parent_id null = root).
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TraceIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentWriteBody'
+      responses:
+        '200':
+          description: Comment envelope or domain error envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentEnvelope'
+        '401':
+          description: Missing or invalid Bearer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Write denied / identity_verified false
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /threads/issues/{issue_id}/reactions:
+    put:
+      tags: [Social]
+      operationId: writeThreadReaction
+      summary: Add or remove a reaction mark
+      description: |
+        Bearer + `handle_reaction` → `write_reaction` / `remove_reaction`.
+        Catalog `reactions.v1`. U2 success data includes selected / summary_marks.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TraceIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReactionWriteBody'
+      responses:
+        '200':
+          description: Reaction envelope or domain error envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReactionEnvelope'
+        '401':
+          description: Missing or invalid Bearer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Write denied / identity_verified false
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /threads/issues/{issue_id}/attachment-refs:
+    post:
+      tags: [Social]
+      operationId: createAttachmentRef
+      summary: Bind an attachment reference (no blob)
+      description: |
+        Bearer + `handle_create_attachment_ref` → `write_attachment_ref`.
+        Refs only — no multipart / bytes. Floor/allowlist deny →
+        `DOMAIN_ERROR` + `details.reason=attach-denied`.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: issue_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/TraceIdHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AttachmentWriteBody'
+      responses:
+        '200':
+          description: Attachment-ref envelope or attach-denied error envelope
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttachmentEnvelope'
+        '401':
+          description: Missing or invalid Bearer
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '403':
+          description: Write denied / identity_verified false
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
