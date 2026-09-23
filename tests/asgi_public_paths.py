@@ -1,18 +1,22 @@
-"""Current public ASGI GET paths after HTTP-02 (ops + knobs + tree)."""
+"""Closed public ASGI inventory after HTTP-06 (Ops + W2 social)."""
 
 from __future__ import annotations
 
 from typing import Any
 
-CURRENT_PUBLIC_GET_PATHS = [
-    "/health",
-    "/ready",
-    "/threads/issues/{issue_id}",
-    "/threads/issues/{issue_id}/attachment-refs",
-    "/threads/issues/{issue_id}/comments",
-    "/threads/issues/{issue_id}/reactions",
-    "/threads/knobs",
-]
+CLOSED_HTTP_INVENTORY: list[tuple[str, str]] = sorted(
+    [
+        ("GET", "/health"),
+        ("GET", "/ready"),
+        ("GET", "/threads/knobs"),
+        ("GET", "/threads/issues/{issue_id}"),
+        ("POST", "/threads/issues/{issue_id}/comments"),
+        ("PUT", "/threads/issues/{issue_id}/reactions"),
+        ("POST", "/threads/issues/{issue_id}/attachment-refs"),
+    ]
+)
+
+CURRENT_PUBLIC_GET_PATHS = sorted({path for _method, path in CLOSED_HTTP_INVENTORY})
 
 
 def listed_asgi_paths(app: Any) -> list[str]:
@@ -23,3 +27,17 @@ def listed_asgi_paths(app: Any) -> list[str]:
         )
         if isinstance(path, str)
     )
+
+
+def listed_asgi_method_paths(app: Any) -> list[tuple[str, str]]:
+    pairs: list[tuple[str, str]] = []
+    for route in app.routes:
+        path = getattr(route, "path", None)
+        methods = getattr(route, "methods", None)
+        if not isinstance(path, str) or not methods:
+            continue
+        for method in methods:
+            if method in {"HEAD", "OPTIONS"}:
+                continue
+            pairs.append((method, path))
+    return sorted(pairs)
