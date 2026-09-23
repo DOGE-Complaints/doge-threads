@@ -2,12 +2,21 @@ from __future__ import annotations
 
 from typing import Any
 
+from pydantic import BaseModel
+
 from core.api.dependencies import ApiDependencies
 from core.api.envelope import build_success_envelope, ensure_trace_id
 from core.api.thread_key_builder import build_issue_thread_key
 from core.config import ConfigError
 from core.domain.comment import Comment
 from core.domain.ports import ThreadKnobs
+
+
+class CommentWriteBody(BaseModel):
+    """FE §3 comment create/reply body."""
+
+    body: str
+    parent_id: str | None = None
 
 
 def knobs_snapshot(knobs: ThreadKnobs) -> dict[str, Any]:
@@ -61,5 +70,33 @@ def handle_tree(
             "issue_id": issue_id,
             "comments": [_comment_payload(comment) for comment in comments],
         },
+        trace_id=ensure_trace_id(trace_id),
+    ).as_dict()
+
+
+def handle_create_comment(
+    dependencies: ApiDependencies,
+    issue_id: str,
+    payload: CommentWriteBody,
+    bearer_token: str,
+    trace_id: str | None = None,
+) -> dict[str, Any]:
+    """Thin wrap of orchestrator write_comment. ThreadKey from HTTP-02 builder."""
+    orchestrator = dependencies.write_orchestrator
+    if orchestrator is None:
+        raise ConfigError("write_orchestrator is not wired")
+    key = build_issue_thread_key(
+        issue_id=issue_id,
+        schema_id=dependencies.config.dogestonia_schema_id,
+    )
+    comment = orchestrator.write_comment(
+        bearer_token,
+        issue_id,
+        key,
+        payload.body,
+        parent_id=payload.parent_id,
+    )
+    return build_success_envelope(
+        data=_comment_payload(comment),
         trace_id=ensure_trace_id(trace_id),
     ).as_dict()
