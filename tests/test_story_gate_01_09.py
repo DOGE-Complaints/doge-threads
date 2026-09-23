@@ -52,7 +52,8 @@ def test_in_memory_store_kept_and_providers_unswitched(app_config: AppConfig) ->
 def test_ac_thr_01_no_new_public_http() -> None:
     assert _asgi_paths() == CURRENT_PUBLIC_GET_PATHS
     asgi = _ASGI.read_text(encoding="utf-8")
-    assert '@app.put("/threads' not in asgi
+    assert '@app.put("/threads/issues/{issue_id}/reactions")' in asgi
+    assert '@app.put("/threads/by-issue' not in asgi
     assert '@app.post("/threads/issues/{issue_id}/attachment-refs' not in asgi
     assert "SupabaseDiscussionStore" not in asgi
 

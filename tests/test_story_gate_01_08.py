@@ -63,6 +63,7 @@ def test_ac_thr_01_ddl_is_not_public_http() -> None:
     asgi = (
         Path(__file__).resolve().parents[1] / "src" / "core" / "api" / "asgi_app.py"
     ).read_text(encoding="utf-8")
-    assert '@app.put("/threads' not in asgi
+    assert '@app.put("/threads/issues/{issue_id}/reactions")' in asgi
+    assert '@app.put("/threads/by-issue' not in asgi
     assert '@app.post("/threads/issues/{issue_id}/attachment-refs' not in asgi
     assert "create table" not in asgi

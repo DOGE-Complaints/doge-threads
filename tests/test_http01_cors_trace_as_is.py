@@ -16,7 +16,7 @@ _API_REF = (
 def test_cors_middleware_unchanged() -> None:
     cors = next(m for m in app.user_middleware if m.cls is CORSMiddleware)
     assert cors.kwargs["allow_origins"] == ["*"]
-    assert cors.kwargs["allow_methods"] == ["GET", "POST", "OPTIONS"]
+    assert cors.kwargs["allow_methods"] == ["GET", "POST", "PUT", "OPTIONS"]
     assert cors.kwargs["allow_headers"] == ["x-trace-id", "authorization"]
 
 

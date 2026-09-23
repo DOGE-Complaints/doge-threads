@@ -28,7 +28,9 @@ def make_orchestrator(*, verified: bool = True) -> tuple[
     reactions = InMemoryReactionMarksStore(knobs=knobs)
     attachments = InMemoryAttachmentRefStore(knobs=knobs)
     me = MagicMock()
-    me.fetch_me.return_value = {"data": {"identity_verified": verified}}
+    me.fetch_me.return_value = {
+        "data": {"identity_verified": verified, "supabase_user_id": "actor-1"}
+    }
     gateway, mock_http = stub_gateway_client()
     orchestrator = ThreadWriteOrchestrator(
         gateway=gateway,

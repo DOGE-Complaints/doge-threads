@@ -43,5 +43,6 @@ def test_no_product_write_routes_yet() -> None:
         assert f'@app.post("{prefix}' not in asgi
         assert f'@app.put("{prefix}' not in asgi
     assert '@app.post("/threads/issues/{issue_id}/comments")' in asgi
-    assert '@app.put("/threads' not in asgi
+    assert '@app.put("/threads/issues/{issue_id}/reactions")' in asgi
+    assert '@app.put("/threads/by-issue' not in asgi
     assert '@app.post("/threads/issues/{issue_id}/attachment-refs' not in asgi
