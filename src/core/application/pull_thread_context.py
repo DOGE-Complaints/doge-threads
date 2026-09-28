@@ -23,12 +23,21 @@ def _json_payload(response: Any, *, path: str) -> Mapping[str, Any]:
     return payload
 
 
+def _as_gateway_body(payload: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Accept bare body or Ops success envelope ``{data, trace_id}``."""
+    data = payload.get("data")
+    if isinstance(data, Mapping):
+        return data
+    return payload
+
+
 def pull_issue_projection(client: GatewayClient, issue_id: str) -> IssueProjection:
     """Pull civic Issue get via existing GatewayClient. Path caller-supplied."""
     path = ISSUE_GET_PATH_TEMPLATE.format(issue_id=issue_id)
     payload = _json_payload(client.request("GET", path), path=path)
-    assert_no_story_narrative(payload)
-    return parse_issue_projection(payload, fallback_issue_id=issue_id)
+    body = _as_gateway_body(payload)
+    assert_no_story_narrative(body)
+    return parse_issue_projection(body, fallback_issue_id=issue_id)
 
 
 def pull_pack_shell_settings(client: GatewayClient) -> Mapping[str, Any]:
@@ -37,10 +46,11 @@ def pull_pack_shell_settings(client: GatewayClient) -> Mapping[str, Any]:
         client.request("GET", SHELL_SETTINGS_PATH),
         path=SHELL_SETTINGS_PATH,
     )
-    assert_no_story_narrative(payload)
-    if "pack_shell_settings" not in payload:
+    body = _as_gateway_body(payload)
+    assert_no_story_narrative(body)
+    if "pack_shell_settings" not in body:
         raise ThreadContextError("pack_shell_settings missing")
-    return payload
+    return body
 
 
 def pull_and_compose(client: GatewayClient, issue_id: str) -> ThreadContext:

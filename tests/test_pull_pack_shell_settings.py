@@ -23,6 +23,14 @@ def test_pull_shell_settings_uses_service_headers() -> None:
     }
 
 
+def test_pull_shell_settings_unwraps_ops_success_envelope() -> None:
+    enveloped = {"data": SAMPLE_SETTINGS_PAYLOAD, "trace_id": "tr-pack"}
+    client, mock_http = stub_gateway_client(settings_payload=enveloped)
+    with patch("core.gateway.client.httpx.Client", return_value=mock_http):
+        payload = pull_pack_shell_settings(client)
+    assert payload["pack_shell_settings"]["threads"]["tree"]["max_depth"] == 3
+
+
 def test_pull_and_compose_offline_stub() -> None:
     client, mock_http = stub_gateway_client()
     with patch("core.gateway.client.httpx.Client", return_value=mock_http):

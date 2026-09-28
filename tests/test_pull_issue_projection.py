@@ -26,6 +26,15 @@ def test_pull_issue_projection_opaque_ids_only() -> None:
     assert url == f"https://gateway.example/node/issues/{SAMPLE_ISSUE_ID}"
 
 
+def test_pull_issue_unwraps_ops_success_envelope() -> None:
+    enveloped = {"data": SAMPLE_ISSUE_PAYLOAD, "trace_id": "tr-issue"}
+    client, mock_http = stub_gateway_client(issue_payload=enveloped)
+    with patch("core.gateway.client.httpx.Client", return_value=mock_http):
+        issue = pull_issue_projection(client, SAMPLE_ISSUE_ID)
+    assert issue.issue_id == SAMPLE_ISSUE_ID
+    assert issue.opaque_story_ids == (SAMPLE_STORY_ID,)
+
+
 def test_pull_issue_rejects_story_body() -> None:
     tainted = {
         "issue": {
