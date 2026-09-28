@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from core.config import AppConfig
-from core.domain.ports import DiscussionStore, ThreadKnobs, ThreadWritePort
+from core.domain.ports import DiscussionStore, ReactionMarksStore, ThreadKnobs, ThreadWritePort
 
 
 class ThreadServiceFactory(Protocol):
@@ -27,4 +27,9 @@ class ThreadServiceFactory(Protocol):
     @property
     def write_orchestrator(self) -> ThreadWritePort:
         """Return the arch §3 write orchestrator (domain API, not HTTP)."""
+        ...
+
+    @property
+    def reaction_store(self) -> ReactionMarksStore:
+        """Return the marks store for thread-batch reads (not write-orchestrator)."""
         ...

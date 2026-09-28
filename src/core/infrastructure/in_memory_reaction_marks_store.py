@@ -14,6 +14,7 @@ from core.domain.reaction_catalog import (
     MUTEX_PAIRS,
 )
 from core.domain.reaction_mark import ReactionMark, ReactionTarget
+from core.domain.thread_key import ThreadKey
 
 
 class InMemoryReactionMarksStore:
@@ -63,6 +64,9 @@ class InMemoryReactionMarksStore:
 
     def list_marks(self, target: ReactionTarget) -> list[ReactionMark]:
         return [item for item in self._marks if item.target == target]
+
+    def list_marks_for_thread(self, key: ThreadKey) -> list[ReactionMark]:
+        return [item for item in self._marks if item.target.thread_key == key]
 
     def _enabled(self, reaction_id: str) -> bool:
         enable = self._knobs.reactions_enable

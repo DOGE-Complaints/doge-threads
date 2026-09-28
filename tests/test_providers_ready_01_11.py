@@ -142,8 +142,14 @@ class _SharedFake:
                     if item["node"] == self._eq(params, "node")
                     and item["entity_type"] == self._eq(params, "entity_type")
                     and item["entity_id"] == self._eq(params, "entity_id")
-                    and item["target_kind"] == self._eq(params, "target_kind")
-                    and item.get("comment_id") == self._eq(params, "comment_id")
+                    and (
+                        "target_kind" not in params
+                        or item["target_kind"] == self._eq(params, "target_kind")
+                    )
+                    and (
+                        "comment_id" not in params
+                        or item.get("comment_id") == self._eq(params, "comment_id")
+                    )
                 ]
             if method == "POST":
                 row = dict(json_body)

@@ -97,6 +97,7 @@ def provide_service_factory(config: AppConfig | None = None) -> ThreadServiceFac
         discussion_store=discussion_store,
         thread_knobs=thread_knobs,
         write_orchestrator=write_orchestrator,
+        reaction_store=reaction_store,
         db_ready=db_ready,
         db_checks=db_checks,
         supabase_db=supabase_db,

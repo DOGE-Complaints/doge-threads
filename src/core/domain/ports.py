@@ -81,6 +81,10 @@ class ReactionMarksStore(Protocol):
         """Return marks for a target in insertion order."""
         ...
 
+    def list_marks_for_thread(self, key: ThreadKey) -> list[ReactionMark]:
+        """Return all marks for a thread key (batch; not per-target)."""
+        ...
+
 
 class MediaFloor(Protocol):
     """Platform legal media floor. Node knobs cannot disable this hook."""

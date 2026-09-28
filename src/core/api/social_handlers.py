@@ -61,6 +61,19 @@ def _comment_payload(comment: Comment) -> dict[str, Any]:
     }
 
 
+def _marks_summary(marks: list[ReactionMark]) -> dict[str, Any]:
+    """U2 aggregate shape for tree read (summary_marks + aggregate_count)."""
+    counts = Counter(item.reaction_id for item in marks)
+    summary = [
+        {"reaction_id": reaction_id, "count": count}
+        for reaction_id, count in sorted(counts.items())
+    ]
+    return {
+        "summary_marks": summary,
+        "aggregate_count": len(marks),
+    }
+
+
 def handle_knobs(
     dependencies: ApiDependencies, trace_id: str | None = None
 ) -> dict[str, Any]:
@@ -79,7 +92,7 @@ def handle_tree(
     issue_id: str,
     trace_id: str | None = None,
 ) -> dict[str, Any]:
-    """Public tree read: issue_id + comments[] only (T1; no knobs)."""
+    """Public tree read: issue_id + comments[] (+ reaction summaries; T1 — no knobs)."""
     store = dependencies.discussion_store
     if store is None:
         raise ConfigError("discussion_store is not wired")
@@ -88,10 +101,28 @@ def handle_tree(
         schema_id=dependencies.config.dogestonia_schema_id,
     )
     comments = store.list_comments(key)
+    marks_store = dependencies.reaction_store
+    thread_marks = (
+        marks_store.list_marks_for_thread(key) if marks_store is not None else []
+    )
+    root_marks: list[ReactionMark] = []
+    marks_by_comment: dict[str, list[ReactionMark]] = {}
+    for item in thread_marks:
+        if item.target.kind == "thread_root":
+            root_marks.append(item)
+        elif item.target.comment_id is not None:
+            marks_by_comment.setdefault(item.target.comment_id, []).append(item)
+    comment_rows: list[dict[str, Any]] = []
+    for comment in comments:
+        row = _comment_payload(comment)
+        row.update(_marks_summary(marks_by_comment.get(comment.comment_id, [])))
+        comment_rows.append(row)
+    root_summary = _marks_summary(root_marks)
     return build_success_envelope(
         data={
             "issue_id": issue_id,
-            "comments": [_comment_payload(comment) for comment in comments],
+            "comments": comment_rows,
+            "thread_root_reactions": root_summary,
         },
         trace_id=ensure_trace_id(trace_id),
     ).as_dict()

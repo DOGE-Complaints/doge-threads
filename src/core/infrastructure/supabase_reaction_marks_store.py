@@ -18,6 +18,7 @@ from core.domain.reaction_catalog import (
     MUTEX_PAIRS,
 )
 from core.domain.reaction_mark import ReactionMark, ReactionTarget
+from core.domain.thread_key import ThreadKey
 from core.infrastructure.db_supabase import SupabaseDatabase
 from core.infrastructure.supabase_marks_mappers import MARKS_TABLE, mark_from_row, mark_to_row
 
@@ -96,6 +97,21 @@ class SupabaseReactionMarksStore:
             params["comment_id"] = "is.null"
         else:
             params["comment_id"] = f"eq.{target.comment_id}"
+        payload = self._db._request(
+            method="GET",
+            path=f"/rest/v1/{MARKS_TABLE}",
+            params=params,
+        )
+        return [mark_from_row(row) for row in _as_rows(payload)]
+
+    def list_marks_for_thread(self, key: ThreadKey) -> list[ReactionMark]:
+        params: dict[str, str] = {
+            "select": "actor_id,node,entity_type,entity_id,target_kind,comment_id,reaction_id",
+            "node": f"eq.{key.node}",
+            "entity_type": f"eq.{key.entity_type}",
+            "entity_id": f"eq.{key.entity_id}",
+            "order": "created_at.asc",
+        }
         payload = self._db._request(
             method="GET",
             path=f"/rest/v1/{MARKS_TABLE}",

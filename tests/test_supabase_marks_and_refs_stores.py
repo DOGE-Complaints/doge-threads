@@ -63,8 +63,14 @@ class _FakePostgrest:
                     if item["node"] == self._eq(params, "node")
                     and item["entity_type"] == self._eq(params, "entity_type")
                     and item["entity_id"] == self._eq(params, "entity_id")
-                    and item["target_kind"] == self._eq(params, "target_kind")
-                    and item.get("comment_id") == self._eq(params, "comment_id")
+                    and (
+                        "target_kind" not in params
+                        or item["target_kind"] == self._eq(params, "target_kind")
+                    )
+                    and (
+                        "comment_id" not in params
+                        or item.get("comment_id") == self._eq(params, "comment_id")
+                    )
                 ]
             if method == "POST":
                 row = dict(json_body)
@@ -115,6 +121,7 @@ def test_mark_roundtrip_and_catalog_id() -> None:
     assert stored.reaction_id == "acknowledge"
     assert stored.reaction_id in CATALOG_REACTION_IDS
     assert store.list_marks(_root()) == [stored]
+    assert store.list_marks_for_thread(_root().thread_key) == [stored]
     assert all(path.endswith("thread_reaction_marks") for _, path in fake.calls)
 
 
