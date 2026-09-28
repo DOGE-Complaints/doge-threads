@@ -38,6 +38,7 @@ This means:
    - `allow_headers=["x-trace-id", "authorization"]`
 
 5. Domain compose / Me / Gateway clients and write orchestrator live in `src/core/` and are reached through the social handlers above.
+6. Thread tree / write keying: `ThreadKey.node` = env `DOGESTONIA_SCHEMA_ID` (`schema.py` / `example.env`; VERSION is parity-only). Missing ID → `ConfigError` → envelope **500**.
 
 Do not invent superseded FE draft path prefixes.
 
@@ -93,6 +94,8 @@ Exception → envelope mapping in `build_error_envelope`:
 | other | `INTERNAL_ERROR` | `internal` | handler **500** |
 
 Attachment floor/allowlist deny maps to `DOMAIN_ERROR` + `details.reason=attach-denied`.
+
+Request body validation failures (invalid/missing Pydantic fields) use FastAPI/Starlette default **HTTP 422** and are **not** remapped into the envelope handlers above.
 
 CORS / `x-trace-id` stay as-is (§2). U4 origin lockdown is **out of HTTP-01**.
 
@@ -187,28 +190,30 @@ Documented after implement. Path table = arch `00-overview` §2. Handlers in `so
 
 ### `GET /threads/issues/{issue_id}`
 
-- **Handler**: `handle_tree` → `list_comments` (T1 — comments only, no knobs)
+- **Handler**: `handle_tree` → `list_comments` + U2 reaction summaries (T1 — no knobs)
 - **Auth**: public
-- **`data`**: `{ issue_id, comments: [{ comment_id, parent_id, depth, body }] }`
+- **`data`**: `{ issue_id, comments: [{ comment_id, parent_id, depth, body, summary_marks[{reaction_id,count}], aggregate_count }], thread_root_reactions: { summary_marks, aggregate_count } }`
 
 ### `POST /threads/issues/{issue_id}/comments`
 
 - **Handler**: `handle_create_comment` → `write_comment`
 - **Auth**: Bearer
 - **Body**: `{ body, parent_id }` (`parent_id` null = root)
+- **`data`**: `{ comment_id, parent_id, depth, body }`
 
 ### `PUT /threads/issues/{issue_id}/reactions`
 
 - **Handler**: `handle_reaction` → `write_reaction` / `remove_reaction`
 - **Auth**: Bearer
-- **Body**: `{ target_kind, comment_id, reaction_id, op }` (`add` / `remove`)
-- **`data`**: U2 `{ selected, summary_marks, aggregate_count, … }`
+- **Body**: `{ target_kind, comment_id, reaction_id, op }` (`target_kind`: `thread_root` \| `comment`; `op`: `add` \| `remove`)
+- **`data`**: U2 `{ issue_id, target_kind, comment_id, reaction_id, op, selected, summary_marks[{reaction_id,count}], aggregate_count }`
 
 ### `POST /threads/issues/{issue_id}/attachment-refs`
 
 - **Handler**: `handle_create_attachment_ref` → `write_attachment_ref`
 - **Auth**: Bearer
 - **Body**: `{ ref_id, media_type, comment_id }` (optional `floor_class`, default `ok`)
+- **`data`**: `{ ref_id, media_type, comment_id, floor_class }`
 - **Deny**: `DOMAIN_ERROR` + `details.reason=attach-denied`
 - **No** multipart / blob / bytes route
 

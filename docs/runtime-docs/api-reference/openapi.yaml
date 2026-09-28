@@ -42,6 +42,7 @@ components:
             - INFRASTRUCTURE_ERROR
             - INTERNAL_ERROR
             - UNAUTHORIZED
+            - FORBIDDEN
         type:
           type: string
           examples: [validation, domain, infrastructure, internal, auth]
@@ -149,16 +150,47 @@ components:
           type: integer
         body:
           type: string
+    MarksSummary:
+      type: object
+      required: [summary_marks, aggregate_count]
+      properties:
+        summary_marks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReactionMarkCount'
+        aggregate_count:
+          type: integer
+    TreeCommentItem:
+      type: object
+      required: [comment_id, parent_id, depth, body, summary_marks, aggregate_count]
+      properties:
+        comment_id:
+          type: string
+        parent_id:
+          type: string
+          nullable: true
+        depth:
+          type: integer
+        body:
+          type: string
+        summary_marks:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReactionMarkCount'
+        aggregate_count:
+          type: integer
     TreeData:
       type: object
-      required: [issue_id, comments]
+      required: [issue_id, comments, thread_root_reactions]
       properties:
         issue_id:
           type: string
         comments:
           type: array
           items:
-            $ref: '#/components/schemas/CommentItem'
+            $ref: '#/components/schemas/TreeCommentItem'
+        thread_root_reactions:
+          $ref: '#/components/schemas/MarksSummary'
     TreeEnvelope:
       type: object
       required: [data, trace_id]
@@ -375,10 +407,11 @@ paths:
     get:
       tags: [Social]
       operationId: getThreadTree
-      summary: Thread tree (comments only)
+      summary: Thread tree (comments + reaction summaries)
       description: |
-        `handle_tree` → `list_comments`. T1 — no knobs in body.
-        ThreadKey.node from `DOGESTONIA_SCHEMA_ID`.
+        `handle_tree` → `list_comments` + U2 summaries. T1 — no knobs in body.
+        Tree `data` = `issue_id` + `comments[]` (`summary_marks` / `aggregate_count`)
+        + `thread_root_reactions`. ThreadKey.node from `DOGESTONIA_SCHEMA_ID`.
       parameters:
         - name: issue_id
           in: path
