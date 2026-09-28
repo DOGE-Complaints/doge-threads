@@ -5,10 +5,12 @@ from __future__ import annotations
 import pytest
 from fastapi.testclient import TestClient
 
-from core.api.asgi_app import _clear_api_dependencies_cache, get_api_dependencies
+from core.api.asgi_app import _clear_api_dependencies_cache, app, get_api_dependencies
+from core.api.dependencies import ApiDependencies
 from core.api.thread_key_builder import build_issue_thread_key
-from core.config import ConfigError
+from core.config import ConfigError, load_config_from_env
 from core.domain.reaction_mark import ReactionMark, ReactionTarget
+from write_orchestrator_fixtures import make_orchestrator
 
 
 def test_empty_tree_has_issue_id_and_no_knobs(
@@ -108,8 +110,89 @@ def test_tree_with_marks_aggregates(
         "summary_marks": [{"reaction_id": "acknowledge", "count": 1}],
         "aggregate_count": 1,
     }
+    assert "selected" not in data["thread_root_reactions"]
     assert data["comments"][0]["summary_marks"] == [{"reaction_id": "agree", "count": 2}]
     assert data["comments"][0]["aggregate_count"] == 2
+    assert "selected" not in data["comments"][0]
+
+
+def test_tree_with_bearer_includes_selected_from_batch_marks() -> None:
+    orch, store, marks, _refs, _mock_http, me = make_orchestrator(verified=True)
+    config = load_config_from_env(
+        {
+            "APP_PROFILE": "demo",
+            "DB_BACKEND": "in_memory",
+            "DOGESTONIA_SCHEMA_ID": "uus_veerenni_civic",
+            "GATEWAY_BASE_URL": "https://gateway.example",
+        }
+    )
+    deps = ApiDependencies(
+        config=config,
+        write_orchestrator=orch,
+        discussion_store=store,
+        reaction_store=marks,
+        thread_knobs=store.knobs,
+        identity_me=me,
+        gateway=orch._gateway,
+    )
+    app.dependency_overrides[get_api_dependencies] = lambda: deps
+    try:
+        key = build_issue_thread_key(
+            issue_id="issue-selected-actor",
+            schema_id=deps.config.dogestonia_schema_id,
+        )
+        store.attach_thread(key)
+        comment = store.create_comment(key, "root body")
+        marks.add_mark(
+            ReactionMark(
+                actor_id="actor-1",
+                target=ReactionTarget(kind="thread_root", thread_key=key),
+                reaction_id="acknowledge",
+            )
+        )
+        marks.add_mark(
+            ReactionMark(
+                actor_id="actor-1",
+                target=ReactionTarget(
+                    kind="comment", thread_key=key, comment_id=comment.comment_id
+                ),
+                reaction_id="agree",
+            )
+        )
+        marks.add_mark(
+            ReactionMark(
+                actor_id="actor-b",
+                target=ReactionTarget(
+                    kind="comment", thread_key=key, comment_id=comment.comment_id
+                ),
+                reaction_id="agree",
+            )
+        )
+        auth_client = TestClient(app)
+        authed = auth_client.get(
+            "/threads/issues/issue-selected-actor",
+            headers={"Authorization": "Bearer user-tok"},
+        )
+        assert authed.status_code == 200
+        data = authed.json()["data"]
+        assert "knobs" not in data
+        assert data["thread_root_reactions"]["selected"] == ["acknowledge"]
+        assert data["comments"][0]["selected"] == ["agree"]
+        assert data["thread_root_reactions"]["summary_marks"] == [
+            {"reaction_id": "acknowledge", "count": 1}
+        ]
+        assert data["comments"][0]["aggregate_count"] == 2
+        me.fetch_me.assert_called_once_with("user-tok")
+
+        anon = auth_client.get("/threads/issues/issue-selected-actor")
+        assert anon.status_code == 200
+        anon_data = anon.json()["data"]
+        assert "selected" not in anon_data
+        assert "selected" not in anon_data["thread_root_reactions"]
+        assert "selected" not in anon_data["comments"][0]
+        assert anon_data["comments"][0]["aggregate_count"] == 2
+    finally:
+        app.dependency_overrides.clear()
 
 
 def test_tree_does_not_use_orchestrator_list_reaction_marks(

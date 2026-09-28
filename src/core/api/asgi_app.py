@@ -22,6 +22,7 @@ from core.api.social_handlers import (
     handle_reaction,
     handle_tree,
 )
+from core.api.product_auth import optional_user_bearer
 from core.api.product_auth import product_write_bearer as apply_product_write_bearer
 from core.api.security import UnauthorizedError
 from core.config import ConfigError
@@ -228,7 +229,12 @@ async def threads_tree(
     request: Request,
     deps: ApiDependencies = Depends(get_api_dependencies),
 ) -> JSONResponse:
-    payload = handle_tree(deps, issue_id, trace_id=_read_trace_id(request))
+    payload = handle_tree(
+        deps,
+        issue_id,
+        trace_id=_read_trace_id(request),
+        bearer_token=optional_user_bearer(request),
+    )
     return JSONResponse(content=payload, status_code=_json_http_status(payload))
 
 

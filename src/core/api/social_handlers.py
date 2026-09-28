@@ -61,17 +61,24 @@ def _comment_payload(comment: Comment) -> dict[str, Any]:
     }
 
 
-def _marks_summary(marks: list[ReactionMark]) -> dict[str, Any]:
+def _marks_summary(
+    marks: list[ReactionMark], *, actor_id: str | None = None
+) -> dict[str, Any]:
     """U2 aggregate shape for tree read (summary_marks + aggregate_count)."""
     counts = Counter(item.reaction_id for item in marks)
     summary = [
         {"reaction_id": reaction_id, "count": count}
         for reaction_id, count in sorted(counts.items())
     ]
-    return {
+    payload: dict[str, Any] = {
         "summary_marks": summary,
         "aggregate_count": len(marks),
     }
+    if actor_id is not None:
+        payload["selected"] = sorted(
+            item.reaction_id for item in marks if item.actor_id == actor_id
+        )
+    return payload
 
 
 def handle_knobs(
@@ -91,8 +98,13 @@ def handle_tree(
     dependencies: ApiDependencies,
     issue_id: str,
     trace_id: str | None = None,
+    bearer_token: str | None = None,
 ) -> dict[str, Any]:
-    """Public tree read: issue_id + comments[] (+ reaction summaries; T1 — no knobs)."""
+    """Public tree read: issue_id + comments[] (+ reaction summaries; T1 — no knobs).
+
+    Optional Bearer: authenticated actor gets U2 ``selected[]`` on root + comments.
+    Anonymous omits ``selected`` and still returns summaries.
+    """
     store = dependencies.discussion_store
     if store is None:
         raise ConfigError("discussion_store is not wired")
@@ -105,6 +117,7 @@ def handle_tree(
     thread_marks = (
         marks_store.list_marks_for_thread(key) if marks_store is not None else []
     )
+    actor_id = _actor_id(dependencies, bearer_token) if bearer_token else None
     root_marks: list[ReactionMark] = []
     marks_by_comment: dict[str, list[ReactionMark]] = {}
     for item in thread_marks:
@@ -115,9 +128,13 @@ def handle_tree(
     comment_rows: list[dict[str, Any]] = []
     for comment in comments:
         row = _comment_payload(comment)
-        row.update(_marks_summary(marks_by_comment.get(comment.comment_id, [])))
+        row.update(
+            _marks_summary(
+                marks_by_comment.get(comment.comment_id, []), actor_id=actor_id
+            )
+        )
         comment_rows.append(row)
-    root_summary = _marks_summary(root_marks)
+    root_summary = _marks_summary(root_marks, actor_id=actor_id)
     return build_success_envelope(
         data={
             "issue_id": issue_id,

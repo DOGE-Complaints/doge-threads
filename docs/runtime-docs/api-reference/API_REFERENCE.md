@@ -191,8 +191,8 @@ Documented after implement. Path table = arch `00-overview` §2. Handlers in `so
 ### `GET /threads/issues/{issue_id}`
 
 - **Handler**: `handle_tree` → `list_comments` + U2 reaction summaries (T1 — no knobs)
-- **Auth**: public
-- **`data`**: `{ issue_id, comments: [{ comment_id, parent_id, depth, body, summary_marks[{reaction_id,count}], aggregate_count }], thread_root_reactions: { summary_marks, aggregate_count } }`
+- **Auth**: public; optional Bearer (`optional_user_bearer`). Anonymous: summaries only. Authenticated: U2 `selected[]` on `thread_root_reactions` and each comment (same formula as PUT reactions).
+- **`data`**: `{ issue_id, comments: [{ comment_id, parent_id, depth, body, summary_marks[{reaction_id,count}], aggregate_count, selected? }], thread_root_reactions: { summary_marks, aggregate_count, selected? } }`
 
 ### `POST /threads/issues/{issue_id}/comments`
 

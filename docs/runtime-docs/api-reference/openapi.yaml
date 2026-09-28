@@ -28,7 +28,7 @@ components:
     BearerAuth:
       type: http
       scheme: bearer
-      description: Required on write routes (`product_write_bearer`).
+      description: Required on write routes (`product_write_bearer`). Optional on tree GET (`optional_user_bearer`) for U2 `selected[]`.
   schemas:
     ErrorBody:
       type: object
@@ -160,6 +160,11 @@ components:
             $ref: '#/components/schemas/ReactionMarkCount'
         aggregate_count:
           type: integer
+        selected:
+          type: array
+          items:
+            type: string
+          description: Present only when tree GET carries a valid Bearer (actor's reaction_ids on this target).
     TreeCommentItem:
       type: object
       required: [comment_id, parent_id, depth, body, summary_marks, aggregate_count]
@@ -179,6 +184,11 @@ components:
             $ref: '#/components/schemas/ReactionMarkCount'
         aggregate_count:
           type: integer
+        selected:
+          type: array
+          items:
+            type: string
+          description: Present only when tree GET carries a valid Bearer.
     TreeData:
       type: object
       required: [issue_id, comments, thread_root_reactions]
@@ -412,6 +422,11 @@ paths:
         `handle_tree` → `list_comments` + U2 summaries. T1 — no knobs in body.
         Tree `data` = `issue_id` + `comments[]` (`summary_marks` / `aggregate_count`)
         + `thread_root_reactions`. ThreadKey.node from `DOGESTONIA_SCHEMA_ID`.
+        Optional Bearer: authenticated actor gets U2 `selected[]` on comments and
+        `thread_root_reactions`. Anonymous omits `selected` (no Bearer required).
+      security:
+        - {}
+        - BearerAuth: []
       parameters:
         - name: issue_id
           in: path

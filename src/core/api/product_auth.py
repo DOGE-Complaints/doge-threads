@@ -9,9 +9,14 @@ from core.api.security import UnauthorizedError, extract_authorization_bearer
 from core.application.write_gate import IdentityVerifiedWriteGate, assert_write_allowed
 
 
+def optional_user_bearer(request: Request) -> str | None:
+    """Read Authorization: Bearer if present. Missing token is anonymous (None)."""
+    return extract_authorization_bearer(request.headers)
+
+
 def require_user_bearer(request: Request) -> str:
     """Extract Authorization: Bearer or raise UnauthorizedError."""
-    token = extract_authorization_bearer(request.headers)
+    token = optional_user_bearer(request)
     if not token:
         raise UnauthorizedError("Missing Authorization Bearer token.")
     return token
